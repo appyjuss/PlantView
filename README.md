@@ -27,7 +27,7 @@ PlantView is a web application that allows users to upload plant images and dete
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/plantview.git
+git clone https://github.com/appyjuss/plantview.git
 cd plantview
 ```
 
@@ -42,7 +42,7 @@ python app.py
 ### 3. Setup Frontend (React)
 
 ```bash
-cd frontend
+cd plantViewFrontend
 npm install
 npm start
 ```
