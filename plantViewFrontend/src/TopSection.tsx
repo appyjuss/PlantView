@@ -4,10 +4,10 @@ import farmImage from './assets/farm.png';
 
 const TopSection: React.FC = () => {
   return (
-    <section className="top-section-container">
-      <div className="top-section-content">
+    <section className="ts-container">
+      <div className="ts-content">
         <span className="ts-badge">AI-Powered Plant Disease Detection</span>
-        <h1>Protect Your Crops with <br />AI Technology</h1>
+        <h1>Protect Your Crops with <br />AI Technology- Plant View</h1>
         <p className="ts-description">
           Upload plant images and instantly detect potential diseases using our advanced CNN models. 
           Empower your farming with AI technology for healthier crops and better yields.
@@ -17,11 +17,15 @@ const TopSection: React.FC = () => {
           <button className="ts-btn-secondary">Learn More</button>
         </div>
         <div className="ts-features">
-          <span>✅ Accurate AI Detection</span>
-          <span>🌿 CNN-Powered Analysis</span>
+          <span className="ts-feature-item">
+            <span className="ts-icon-check">✓</span> Accurate AI Detection
+          </span>
+          <span className="ts-feature-item">
+            <span className="ts-icon-leaf">🌿</span> CNN-Powered Analysis
+          </span>
         </div>
       </div>
-      <div className="ts-image-container">
+      <div className="ts-image-wrap">
         <img src={farmImage} alt="Rows of plants in a greenhouse" className="ts-image" />
       </div>
     </section>

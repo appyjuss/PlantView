@@ -1,107 +1,126 @@
+/* ======================================= */
 /* TopSection.css */
+/* ======================================= */
 
-.top-section-container {
+.ts-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 60px 40px;
-  background-color: #f8f8f8; 
-  font-family: Arial, sans-serif;
-  color: #333;
-  gap: 40px;
+  padding: 80px 60px; 
+  background-color: #ffffff; 
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #212121; 
+  gap: 60px;
   flex-wrap: wrap; 
 }
 
-.top-section-content {
+.ts-content {
   flex: 1;
-  min-width: 400px; 
+  min-width: 400px;
   max-width: 600px;
-  padding-right: 20px;
 }
 
 .ts-badge {
-  display: inline-block;
-  background-color: #e0ffe0; 
-  color: #388e3c; 
+  background-color: #d1e7dd; 
+  color: #00897b; 
   padding: 8px 15px;
   border-radius: 20px;
   font-size: 0.85em;
-  font-weight: bold;
-  margin-bottom: 20px;
+  font-weight: 600;
+  margin-bottom: 10px; 
+  display: inline-flex; 
+  align-items: center;
+  gap: 8px; 
 }
 
-.top-section-content h1 {
-  font-size: 3.5em; 
-  font-weight: bold;
+.ts-content h1 {
+  font-size: 3.8em; 
+  font-weight: 800; 
   line-height: 1.1;
-  margin-bottom: 20px;
+  margin-top: 0; 
+  margin-bottom: 25px; 
   color: #212121;
 }
 
 .ts-description {
-  font-size: 1.1em;
-  line-height: 1.6;
-  margin-bottom: 30px;
-  color: #555;
+  font-size: 1.15em;
+  line-height: 1.7;
+  margin-bottom: 40px;
+  color: #757575; 
+  font-weight: 400; 
 }
 
 .ts-buttons {
   display: flex;
-  gap: 15px;
-  margin-bottom: 30px;
+  gap: 20px;
+  margin-bottom: 40px;
 }
 
 .ts-btn-primary, .ts-btn-secondary {
-  padding: 12px 25px;
+  padding: 15px 30px; 
   border-radius: 8px;
-  font-size: 1em;
+  font-size: 1.05em;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.2s ease-in-out;
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
 }
 
 .ts-btn-primary {
-  background-color: #388e3c; 
+  background-color: #4CAF50; 
   color: white;
   border: none;
+  box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .ts-btn-primary:hover {
-  background-color: #2e7d32; 
+  background-color: #388e3c; 
+  box-shadow: 0 6px 15px rgba(76, 175, 80, 0.4);
+}
+
+.ts-btn-upload::after {
+  content: '↑'; 
+  font-weight: 900;
+  font-size: 1.2em;
 }
 
 .ts-btn-secondary {
   background-color: transparent;
-  color: #388e3c;
-  border: 2px solid #388e3c;
+  color: #4CAF50;
+  border: 2px solid #4CAF50;
 }
 
 .ts-btn-secondary:hover {
-  background-color: #e0ffe0;
+  background-color: #f1f8e9;
 }
 
 .ts-features {
   display: flex;
   gap: 30px;
   font-size: 0.95em;
-  color: #555;
+  color: #555555;
+  font-weight: 500;
 }
 
-.ts-features span {
+.ts-feature-item {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-weight: 500;
 }
 
-.ts-image-container {
+.ts-image-wrap {
   flex: 1;
-  min-width: 350px; 
-  max-width: 500px;
+  min-width: 350px;
+  max-width: 550px;
   border-radius: 15px;
   overflow: hidden; 
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
 
 .ts-image {
@@ -110,20 +129,14 @@
   display: block;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .top-section-container {
+@media (max-width: 992px) {
+  .ts-container {
     flex-direction: column;
     text-align: center;
     padding: 40px 20px;
   }
-  .top-section-content, .ts-image-container {
-    min-width: unset;
-    max-width: 100%;
-    padding-right: 0;
-  }
-  .top-section-content h1 {
-    font-size: 2.5em;
+  .ts-content h1 {
+    font-size: 3em;
   }
   .ts-buttons, .ts-features {
     justify-content: center;
