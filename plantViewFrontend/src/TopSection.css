@@ -1,0 +1,131 @@
+/* TopSection.css */
+
+.top-section-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 40px;
+  background-color: #f8f8f8; 
+  font-family: Arial, sans-serif;
+  color: #333;
+  gap: 40px;
+  flex-wrap: wrap; 
+}
+
+.top-section-content {
+  flex: 1;
+  min-width: 400px; 
+  max-width: 600px;
+  padding-right: 20px;
+}
+
+.ts-badge {
+  display: inline-block;
+  background-color: #e0ffe0; 
+  color: #388e3c; 
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 0.85em;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.top-section-content h1 {
+  font-size: 3.5em; 
+  font-weight: bold;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  color: #212121;
+}
+
+.ts-description {
+  font-size: 1.1em;
+  line-height: 1.6;
+  margin-bottom: 30px;
+  color: #555;
+}
+
+.ts-buttons {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.ts-btn-primary, .ts-btn-secondary {
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.ts-btn-primary {
+  background-color: #388e3c; 
+  color: white;
+  border: none;
+}
+
+.ts-btn-primary:hover {
+  background-color: #2e7d32; 
+}
+
+.ts-btn-secondary {
+  background-color: transparent;
+  color: #388e3c;
+  border: 2px solid #388e3c;
+}
+
+.ts-btn-secondary:hover {
+  background-color: #e0ffe0;
+}
+
+.ts-features {
+  display: flex;
+  gap: 30px;
+  font-size: 0.95em;
+  color: #555;
+}
+
+.ts-features span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ts-image-container {
+  flex: 1;
+  min-width: 350px; 
+  max-width: 500px;
+  border-radius: 15px;
+  overflow: hidden; 
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+}
+
+.ts-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .top-section-container {
+    flex-direction: column;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .top-section-content, .ts-image-container {
+    min-width: unset;
+    max-width: 100%;
+    padding-right: 0;
+  }
+  .top-section-content h1 {
+    font-size: 2.5em;
+  }
+  .ts-buttons, .ts-features {
+    justify-content: center;
+  }
+}
