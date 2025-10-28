@@ -6,19 +6,17 @@ import './App.css'
 
 
 function App() {
-  const [count, setCount] = useState(0)
-
   const [file, setFile] = useState(null)
 
   const handleUpload = () => {
     const fd = new FormData()
     fd.append('file', file)
 
-    fetch('/api/upload', {
+    fetch('http://127.0.0.1:8080/', {
       method: "POST",
       body:fd
     })
-    .then(res => res.json())
+    // .then(res => res.json())
     .then(data => console.log(data))
   }
 
