@@ -2,4 +2,4 @@ backend/__pycache__/
 
 uploads/*
 
-!.gitkeep
+plantViewFrontEnd/dist

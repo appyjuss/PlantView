@@ -6,13 +6,17 @@ import './App.css'
 
 
 function App() {
-  const [file, setFile] = useState(null)
 
+  const [file, setFile] = useState<Blob | string | undefined>('')
   const handleUpload = () => {
     const fd = new FormData()
-    fd.append('file', file)
 
-    fetch('http://127.0.0.1:8080/', {
+    if (file === undefined){
+      return new Error('Undefined file')
+    }
+
+    fd.append('file', file)
+    fetch('http://127.0.0.1:8080/API/upload', {
       method: "POST",
       body:fd
     })
@@ -31,7 +35,7 @@ function App() {
         <h1>Image Upload</h1>
 
         <input type="file" onChange={ (event) => {
-          setFile(event.target.files[0]) } } />
+          setFile(event.target.files?.[0])} } />
           <button onClick={ handleUpload } >upload</button>
       </div>
     </>
