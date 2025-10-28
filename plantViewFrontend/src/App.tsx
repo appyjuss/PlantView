@@ -1,33 +1,43 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import leafLogo from './assets/leaflogo.svg'
 import './App.css'
 
+
+
+
 function App() {
-  const [count, setCount] = useState(0)
+
+  const [file, setFile] = useState<Blob | string | undefined>('')
+  const handleUpload = () => {
+    const fd = new FormData()
+
+    if (file === undefined){
+      return new Error('Undefined file')
+    }
+
+    fd.append('file', file)
+    fetch('http://127.0.0.1:8080/API/upload', {
+      method: "POST",
+      body:fd
+    })
+    // .then(res => res.json())
+    .then(data => console.log(data))
+  }
+
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className ='logo'>
+          <img src={leafLogo} className="plantview logo" alt="plantview logo" />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+      <div className='App'>
+
+        <h1>Image Upload</h1>
+
+        <input type="file" onChange={ (event) => {
+          setFile(event.target.files?.[0])} } />
+          <button onClick={ handleUpload } >upload</button>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   )
 }
