@@ -36,7 +36,7 @@ cd plantview
 ```bash
 cd backend
 pip install -r requirements.txt
-python app.py
+flask --app .\main.py run --port=8080
 ```
 
 ### 3. Setup Frontend (React)
