@@ -53,20 +53,20 @@ export default function Data() {
         </div>
 
         <div className="mt-12">
-          <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-12 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
             {items.map((it) => {
               const Icon = it.icon;
               return (
                 <div
                   key={it.id}
-                  className="bg-white rounded-2xl p-8 text-center shadow-[0_8px_24px_rgba(2,6,23,0.06)]"
+                  className="bg-white rounded-2xl p-6 text-left shadow-[0_8px_24px_rgba(2,6,23,0.06)] flex flex-col"
                 >
-                  <div className="mx-auto mb-4 h-14 w-14 rounded-full bg-emerald-600 flex items-center justify-center">
-                    <Icon className="h-6 w-6 text-white" />
+                  <div className="self-center mb-4 h-14 w-14 rounded-full bg-emerald-600 flex items-center justify-center">
+                    <Icon className="h-6 w-6 text-white" aria-hidden="true" />
                   </div>
 
-                  <div className="text-2xl font-extrabold text-emerald-600">{it.stat}</div>
-                  <div className="text-xs text-slate-500 mt-1">{it.statLabel}</div>
+                  <div className="text-2xl font-extrabold text-emerald-600 self-center">{it.stat}</div>
+                  <div className="text-xs text-slate-500 mt-1 self-center">{it.statLabel}</div>
 
                   <h3 className="mt-4 text-lg font-semibold text-slate-900">{it.title}</h3>
                   <p className="mt-3 text-sm text-slate-600">{it.desc}</p>
