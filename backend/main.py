@@ -1,14 +1,14 @@
 import os
 from flask import Flask, flash, request, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
-from flask_cors import CORS
+#from flask_cors import CORS
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', "jpeg"}
 UPLOAD_FOLDER = '../uploads'
 
 app = Flask(__name__, static_folder = "../plantviewFrontend/dist", static_url_path='/')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-cors = CORS(app, origins='*')
+#cors = CORS(app, origins='*')
 
 def allowed_file(filename):
     return '.' in filename and \

@@ -32,11 +32,17 @@ function App() {
       </div>
       <div className='App'>
 
-        <h1>Image Upload</h1>
+        <h1>Dashboard</h1>
 
         <input type="file" onChange={ (event) => {
           setFile(event.target.files?.[0])} } />
-          <button onClick={ handleUpload } >upload</button>
+        <button onClick={ handleUpload } >upload</button><br></br><br></br>
+        <label htmlFor="ImageSelect" style={{width: "150px"}}>Select an image: </label>
+        <select name="ImageSelect" id="imageId"></select><br></br><br></br>
+        <div className="buttonContainer">
+          <button>View</button>
+          <button>Analyze</button>
+        </div>
       </div>
     </>
   )

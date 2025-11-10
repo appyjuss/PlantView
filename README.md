@@ -18,7 +18,7 @@ PlantView is a web application that allows users to upload plant images and dete
 * **Frontend**: React
 * **Backend**: Flask
 * **Machine Learning**: CNN models trained on plant disease datasets
-* **Languages**: Python, JavaScript
+* **Languages**: Python (3.12+ Required), JavaScript, TypeScript
 
 ---
 
@@ -44,7 +44,7 @@ npm run build
 ```bash
 cd backend
 .\.venv\Scripts\activate (windows)
-source myfirstproject/bin/activate (max linux)
+source myfirstproject/bin/activate (mac linux)
 pip install -r requirements.txt
 flask --app .\main.py run --port=8080
 ```
