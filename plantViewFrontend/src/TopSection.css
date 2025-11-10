@@ -1,0 +1,144 @@
+/* ======================================= */
+/* TopSection.css */
+/* ======================================= */
+
+.ts-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 60px; 
+  background-color: #ffffff; 
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #212121; 
+  gap: 60px;
+  flex-wrap: wrap; 
+}
+
+.ts-content {
+  flex: 1;
+  min-width: 400px;
+  max-width: 600px;
+}
+
+.ts-badge {
+  background-color: #d1e7dd; 
+  color: #00897b; 
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 0.85em;
+  font-weight: 600;
+  margin-bottom: 10px; 
+  display: inline-flex; 
+  align-items: center;
+  gap: 8px; 
+}
+
+.ts-content h1 {
+  font-size: 3.8em; 
+  font-weight: 800; 
+  line-height: 1.1;
+  margin-top: 0; 
+  margin-bottom: 25px; 
+  color: #212121;
+}
+
+.ts-description {
+  font-size: 1.15em;
+  line-height: 1.7;
+  margin-bottom: 40px;
+  color: #757575; 
+  font-weight: 400; 
+}
+
+.ts-buttons {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.ts-btn-primary, .ts-btn-secondary {
+  padding: 15px 30px; 
+  border-radius: 8px;
+  font-size: 1.05em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.ts-btn-primary {
+  background-color: #4CAF50; 
+  color: white;
+  border: none;
+  box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ts-btn-primary:hover {
+  background-color: #388e3c; 
+  box-shadow: 0 6px 15px rgba(76, 175, 80, 0.4);
+}
+
+.ts-btn-upload::after {
+  content: '↑'; 
+  font-weight: 900;
+  font-size: 1.2em;
+}
+
+.ts-btn-secondary {
+  background-color: transparent;
+  color: #4CAF50;
+  border: 2px solid #4CAF50;
+}
+
+.ts-btn-secondary:hover {
+  background-color: #f1f8e9;
+}
+
+.ts-features {
+  display: flex;
+  gap: 30px;
+  font-size: 0.95em;
+  color: #555555;
+  font-weight: 500;
+}
+
+.ts-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.ts-image-wrap {
+  flex: 1;
+  min-width: 350px;
+  max-width: 550px;
+  border-radius: 15px;
+  overflow: hidden; 
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+.ts-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+@media (max-width: 992px) {
+  .ts-container {
+    flex-direction: column;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .ts-content h1 {
+    font-size: 3em;
+  }
+  .ts-buttons, .ts-features {
+    justify-content: center;
+  }
+}
