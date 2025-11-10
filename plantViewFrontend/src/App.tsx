@@ -1,51 +1,40 @@
-import { useState } from 'react'
-import leafLogo from './assets/leaflogo.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route} from "react-router-dom";
+// import { AuthProvider, useAuth } from "./context/AuthContext";
+// import Nav from "./components/Nav";
+import Landing from "./pages/Landing.tsx";
+// import Dashboard from "./pages/Dashboard";
+// import Login from "./pages/Login";
+import "./App.css";
 
+// function PrivateRoute({ children }: { children: JSX.Element }) {
+//   const { user } = useAuth();
+//   if (!user) return <Navigate to="/login" replace />;
+//   return children;
+// }
 
-
-
-function App() {
-
-  const [file, setFile] = useState<Blob | string | undefined>('')
-  const handleUpload = () => {
-    const fd = new FormData()
-
-    if (file === undefined){
-      return new Error('Undefined file')
-    }
-
-    fd.append('file', file)
-    fetch('http://127.0.0.1:8080/API/upload', {
-      method: "POST",
-      body:fd
-    })
-    // .then(res => res.json())
-    .then(data => console.log(data))
-  }
-
-
+export default function App() {
   return (
-    <>
-      <div className ='logo'>
-          <img src={leafLogo} className="plantview logo" alt="plantview logo" />
-      </div>
-      <div className='App'>
-
-        <h1>Dashboard</h1>
-
-        <input type="file" onChange={ (event) => {
-          setFile(event.target.files?.[0])} } />
-        <button onClick={ handleUpload } >upload</button><br></br><br></br>
-        <label htmlFor="ImageSelect" style={{width: "150px"}}>Select an image: </label>
-        <select name="ImageSelect" id="imageId"></select><br></br><br></br>
-        <div className="buttonContainer">
-          <button>View</button>
-          <button>Analyze</button>
+    // <AuthProvider>
+      <BrowserRouter>
+        <div className="app-root">
+          {/* <Nav /> */}
+          <main className="app-main">
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              {/* <Route
+                path="/dashboard"
+                element={
+                  <PrivateRoute>
+                    <Dashboard />
+                  </PrivateRoute>
+                }
+              />
+              <Route path="/login" element={<Login />} /> */}
+              {/* add more routes here */}
+            </Routes>
+          </main>
         </div>
-      </div>
-    </>
-  )
+      </BrowserRouter>
+    // </AuthProvider>
+  );
 }
-
-export default App

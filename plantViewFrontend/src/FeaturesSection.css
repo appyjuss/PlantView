@@ -1,0 +1,48 @@
+/* ======================================= */
+/* FeaturesSection.css */
+/* ======================================= */
+
+.fs-container {
+  padding: 80px 60px; 
+  background-color: #ffffff; 
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #212121;
+}
+
+.fs-header {
+  max-width: 800px; 
+  margin: 0 auto; 
+  margin-bottom: 60px; 
+}
+
+.fs-header h2 {
+  font-size: 3em;
+  font-weight: 800; 
+  line-height: 1.2;
+  margin-bottom: 20px;
+  color: #212121;
+}
+
+.fs-header h2 span {
+  color: #4CAF50; 
+}
+
+.fs-description {
+  font-size: 1.15em;
+  line-height: 1.7;
+  color: #555555; 
+  font-weight: 400;
+}
+
+@media (max-width: 768px) {
+  .fs-container {
+    padding: 60px 20px;
+  }
+  .fs-header h2 {
+    font-size: 2.2em;
+  }
+  .fs-header {
+    margin-bottom: 40px;
+  }
+}
