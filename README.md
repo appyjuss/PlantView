@@ -31,25 +31,27 @@ git clone https://github.com/appyjuss/plantview.git
 cd plantview
 ```
 
-### 2. Setup Backend (Flask)
-
-```bash
-cd backend
-pip install -r requirements.txt
-python app.py
-```
-
 ### 3. Setup Frontend (React)
 
 ```bash
 cd plantViewFrontend
 npm install
-npm start
+npm run build
+```
+
+### 2. Setup Backend (Flask)
+
+```bash
+cd backend
+.\.venv\Scripts\activate (windows)
+source myfirstproject/bin/activate (max linux)
+pip install -r requirements.txt
+flask --app .\main.py run --port=8080
 ```
 
 ### 4. Access the App
 
-Open your browser at `http://localhost:3000`
+Open your browser at `http://localhost:8080`
 
 ---
 
