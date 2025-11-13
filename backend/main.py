@@ -14,6 +14,10 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+@app.route('/API/files')
+def get_images():
+    return os.listdir(UPLOAD_FOLDER)
+
 @app.route('/')
 def home():
     return send_from_directory(app.static_folder, "index.html")
