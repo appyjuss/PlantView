@@ -1,8 +1,8 @@
 #root {
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  /* allow the app to span the full width; remove the restrictive demo styles */
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .logo {
