@@ -2,8 +2,8 @@ import os
 from flask import Blueprint, request, redirect, url_for, flash, current_app, send_from_directory
 from werkzeug.utils import secure_filename
 
-from auth import require_auth
-from utils import allowed_file
+from ..core.auth import require_auth
+from ..core.utils import allowed_file
 
 upload_bp = Blueprint('upload', __name__)
 

@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 
-import storage
-from auth import create_jwt_token
+from ..core import storage
+from ..core import auth as core_auth
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -32,7 +32,7 @@ def signup():
     }
     storage.save_users(users)
 
-    token = create_jwt_token(user_id, email)
+    token = core_auth.create_jwt_token(user_id, email)
     return jsonify({'token': token, 'user': {'id': user_id, 'email': email}}), 201
 
 
@@ -51,5 +51,5 @@ def login():
     if not user or not check_password_hash(user['password'], password):
         return jsonify({'error': 'Invalid email or password'}), 401
 
-    token = create_jwt_token(user['id'], email)
+    token = core_auth.create_jwt_token(user['id'], email)
     return jsonify({'token': token, 'user': {'id': user['id'], 'email': email}}), 200

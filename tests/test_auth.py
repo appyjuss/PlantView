@@ -1,5 +1,5 @@
 from app import create_app
-import auth
+from core import auth
 
 
 def test_jwt_create_and_verify():
