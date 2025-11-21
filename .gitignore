@@ -1,5 +1,17 @@
+# Python backend
+backend/venv/
 backend/__pycache__/
+backend/*.pyc
+backend/uploads/
+backend/users.json
+backend/.env
 
-uploads/*
+# Frontend (Vite/Node)
+plantViewFrontend/node_modules/
+plantViewFrontend/dist/
+plantViewFrontend/.env
+plantViewFrontend/.vite/
 
-plantViewFrontEnd/dist
+# Misc
+.DS_Store
+.env
