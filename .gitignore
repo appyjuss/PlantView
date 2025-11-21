@@ -1,17 +1,38 @@
 # Python backend
 backend/venv/
-backend/__pycache__/
-backend/*.pyc
+backend/.venv/
+
+# Python cache / bytecode (any depth)
+__pycache__/
+**/__pycache__/
+*.py[cod]
+**/*.py[cod]
+
+# Environment files
+.env
+.env.local
+backend/.env
+plantViewFrontend/.env
+
+# Uploads and user data
 backend/uploads/
 backend/users.json
-backend/.env
 
 # Frontend (Vite/Node)
 plantViewFrontend/node_modules/
 plantViewFrontend/dist/
-plantViewFrontend/.env
 plantViewFrontend/.vite/
 
-# Misc
+# Testing / coverage / build
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+dist/
+build/
+pip-wheel-metadata/
+*.egg-info/
+
+# Editor / OS files
+.vscode/
 .DS_Store
-.env
