@@ -36,3 +36,5 @@ pip-wheel-metadata/
 # Editor / OS files
 .vscode/
 .DS_Store
+
+node_modules/

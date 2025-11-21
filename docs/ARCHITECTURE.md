@@ -1,4 +1,19 @@
 # Architecture Diagrams
+# Supabase Storage Integration
+
+All image uploads are stored in a Supabase bucket named `uploads`. The bucket is configured for private access. Backend endpoints authenticate with Supabase using environment variables for keys and secrets. Uploaded files are only accessible to authenticated users.
+
+# Environment Variable Management
+
+Sensitive keys (Supabase service key, JWT secret, etc.) are managed via environment variables. Separate `.env` files are used for staging and production environments. The backend loads these variables at startup and never hardcodes secrets.
+
+# CI/CD Pipeline
+
+Automated CI/CD is set up using GitHub Actions. The pipeline runs linting, pytest-based tests, and deploys to staging or production based on branch or tag. Rollbacks and monitoring are included for reliability.
+
+# Automated Testing
+
+All backend features (auth, upload, detection) are covered by pytest-based tests in the `tests/` directory. Tests run automatically in CI/CD before deployment.
 
 ## Authentication Flow
 
