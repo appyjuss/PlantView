@@ -3,30 +3,58 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function SignUp() {
-	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 	const { signup } = useAuth();
 	const navigate = useNavigate();
 
 	const submit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		setError(null);
+		setLoading(true);
 		try {
-			await signup(name, email, password);
+			await signup(email, password);
+			// Redirect to dashboard or show confirmation message
 			navigate("/dashboard", { replace: true });
 		} catch (err) {
-			console.error(err);
+			const message = err instanceof Error ? err.message : "Signup failed";
+			setError(message);
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	return (
 		<div className="max-w-md mx-auto mt-12 p-6 bg-white rounded-lg shadow">
 			<h2 className="text-2xl font-semibold mb-4">Create account</h2>
+			{error && <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">{error}</div>}
 			<form onSubmit={submit} className="flex flex-col gap-4">
-				<input className="border p-3 rounded" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} />
-				<input className="border p-3 rounded" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-				<input className="border p-3 rounded" placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-				<button className="bg-emerald-600 text-white px-4 py-2 rounded">Create account</button>
+				<input
+					className="border p-3 rounded"
+					placeholder="Email"
+					type="email"
+					value={email}
+					onChange={(e) => setEmail(e.target.value)}
+					disabled={loading}
+					required
+				/>
+				<input
+					className="border p-3 rounded"
+					placeholder="Password"
+					type="password"
+					value={password}
+					onChange={(e) => setPassword(e.target.value)}
+					disabled={loading}
+					required
+				/>
+				<button
+					className="bg-emerald-600 text-white px-4 py-2 rounded disabled:bg-gray-400"
+					disabled={loading}
+				>
+					{loading ? "Creating account..." : "Create account"}
+				</button>
 			</form>
 
 			<p className="mt-4 text-sm">

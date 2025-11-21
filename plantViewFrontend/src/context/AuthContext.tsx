@@ -1,17 +1,18 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 type User = {
   id: string;
-  name: string;
   email: string;
 };
 
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  login: (email: string, password?: string) => Promise<void>;
-  signup: (name: string, email: string, password?: string) => Promise<void>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,36 +22,77 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("mock_user");
-      if (raw) setUser(JSON.parse(raw));
-    } catch (e) {
-      // ignore
-    }
-    setLoading(false);
+    // Check if user is already logged in
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
+
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || "",
+        });
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription?.unsubscribe();
   }, []);
 
-  const login = async (email: string) => {
+  const login = async (email: string, password: string) => {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 500));
-    const mockUser = { id: "1", name: "Demo User", email };
-    localStorage.setItem("mock_user", JSON.stringify(mockUser));
-    setUser(mockUser);
-    setLoading(false);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const signup = async (name: string, email: string) => {
+  const signup = async (email: string, password: string) => {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 600));
-    const mockUser = { id: String(Date.now()), name, email };
-    localStorage.setItem("mock_user", JSON.stringify(mockUser));
-    setUser(mockUser);
-    setLoading(false);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      if (error) throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const logout = () => {
-    localStorage.removeItem("mock_user");
-    setUser(null);
+  const logout = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
