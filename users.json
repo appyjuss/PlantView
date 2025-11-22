@@ -1,0 +1,10 @@
+{
+  "zenithchetri377@gmail.com": {
+    "id": "1",
+    "email": "zenithchetri377@gmail.com",
+    "password": "scrypt:32768:8:1$WIjfHI6oDl5AKmPY$d7fa44220def32e4fb71650cce7716b865a8a8f65ae7daf64d8dfeea512d0148befd984a79b787bcd16e9e0853d8ac762ce250aae4deccdd1847d61df49a5255",
+    "created_at": "2025-11-22T16:59:59.662704+00:00",
+    "failed_login_attempts": 0,
+    "locked_until": null
+  }
+}

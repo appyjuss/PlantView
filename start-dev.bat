@@ -13,9 +13,9 @@ if not exist "backend" (
     exit /b 1
 )
 
-REM Start backend
+REM Activate venv and start backend from root directory
 echo Starting Flask backend...
-start "Flask Backend" cmd /k "cd backend && python main.py"
+start "Flask Backend" cmd /k "venv\scripts\activate && python -m backend"
 
 REM Wait a moment for Flask to start
 timeout /t 3 /nobreak

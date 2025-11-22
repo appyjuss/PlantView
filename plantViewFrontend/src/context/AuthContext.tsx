@@ -1,5 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { signup as apiSignup, login as apiLogin, verifyToken, setToken, getToken, clearToken } from "../lib/api";
+import { 
+  signup as apiSignup, 
+  login as apiLogin, 
+  verifyToken, 
+  setToken, 
+  setRefreshToken,
+  getToken, 
+  clearTokens,
+  logout as apiLogout 
+} from "../lib/api";
 
 type User = {
   id: string;
@@ -11,7 +20,7 @@ type AuthContextType = {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,7 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
-        clearToken();
+        clearTokens();
       } finally {
         setLoading(false);
       }
@@ -43,8 +52,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const { token, user } = await apiLogin(email, password);
-      setToken(token);
+      const { access_token, refresh_token, user } = await apiLogin(email, password);
+      setToken(access_token);
+      setRefreshToken(refresh_token);
       setUser(user);
     } finally {
       setLoading(false);
@@ -54,17 +64,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const { token, user } = await apiSignup(email, password);
-      setToken(token);
+      const { access_token, refresh_token, user } = await apiSignup(email, password);
+      setToken(access_token);
+      setRefreshToken(refresh_token);
       setUser(user);
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = () => {
-    clearToken();
-    setUser(null);
+  const logout = async () => {
+    try {
+      await apiLogout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      clearTokens();
+      setUser(null);
+    }
   };
 
   return (

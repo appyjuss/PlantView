@@ -8,19 +8,36 @@ load_dotenv()
 # Relative imports are preferred for intra-package imports and for clearer module
 # structure. Avoid running `python main.py` from inside the package directory.
 from .app import create_app, register_static_index
-from .routes import auth_bp, upload_bp
+from .routes import auth_bp, upload_bp, limiter
 
 
 # Create the Flask app and register routes
 app = create_app()
-# Set config from environment variables
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'changeme')
+
+# Configure security and auth settings
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 app.config['JWT_ALGORITHM'] = os.getenv('JWT_ALGORITHM', 'HS256')
-app.config['JWT_EXPIRATION_HOURS'] = int(os.getenv('JWT_EXPIRATION_HOURS', '24'))
+app.config['JWT_EXPIRATION_HOURS'] = int(os.getenv('JWT_EXPIRATION_HOURS', '1'))
+app.config['JWT_REFRESH_EXPIRATION_HOURS'] = int(os.getenv('JWT_REFRESH_EXPIRATION_HOURS', '168'))
+
+# Configure Supabase (optional)
 app.config['SUPABASE_URL'] = os.getenv('SUPABASE_URL')
 app.config['SUPABASE_SERVICE_KEY'] = os.getenv('SUPABASE_SERVICE_KEY')
 app.config['SUPABASE_BUCKET'] = os.getenv('SUPABASE_BUCKET', 'uploads')
+
+# Environment and security
 app.config['ENV'] = os.getenv('ENV', 'development')
+app.config['TESTING'] = app.config['ENV'] == 'testing'
+
+# CORS configuration - set before rate limiter
+ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'http://localhost:5173,http://localhost:3000').split(',')
+app.cors_origins = [origin.strip() for origin in ALLOWED_ORIGINS]
+app.config['CORS_ORIGINS'] = app.cors_origins
+
+# Initialize rate limiter with the app
+limiter.init_app(app)
+
+# Register blueprints
 app.register_blueprint(auth_bp)
 app.register_blueprint(upload_bp)
 register_static_index(app)
