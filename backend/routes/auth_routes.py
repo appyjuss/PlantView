@@ -18,7 +18,6 @@ limiter = Limiter(
 
 
 @auth_bp.route('/api/auth/signup', methods=['POST'])
-@limiter.limit("5 per hour")
 def signup():
     """Register a new user with email and password."""
     data = request.get_json()
@@ -63,7 +62,6 @@ def signup():
 
 
 @auth_bp.route('/api/auth/login', methods=['POST'])
-@limiter.limit("10 per hour")
 def login():
     """Authenticate user and return access and refresh tokens."""
     data = request.get_json()
@@ -112,7 +110,6 @@ def login():
 
 
 @auth_bp.route('/api/auth/refresh', methods=['POST'])
-@limiter.limit("30 per hour")
 def refresh():
     """Refresh access token using refresh token."""
     data = request.get_json()

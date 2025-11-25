@@ -4,6 +4,9 @@ import json
 
 DB_FILE = os.getenv('DB_FILE', 'users.json')
 
+# Allow override for testing
+USERS_FILE = DB_FILE
+
 SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_SERVICE_KEY = os.getenv('SUPABASE_SERVICE_KEY')
 SUPABASE_BUCKET = os.getenv('SUPABASE_BUCKET', 'uploads')
@@ -42,10 +45,10 @@ def supabase_get_signed_url(file_key, expires_in=3600):
 
 def load_users():
     """Load users from the file-based DB. Returns a dict."""
-    if not os.path.exists(DB_FILE):
+    if not os.path.exists(USERS_FILE):
         return {}
     try:
-        with open(DB_FILE, 'r') as f:
+        with open(USERS_FILE, 'r') as f:
             return json.load(f)
     except Exception:
         return {}
@@ -53,5 +56,6 @@ def load_users():
 
 def save_users(users):
     """Write users dict back to DB file."""
-    with open(DB_FILE, 'w') as f:
+    os.makedirs(os.path.dirname(USERS_FILE) or '.', exist_ok=True)
+    with open(USERS_FILE, 'w') as f:
         json.dump(users, f, indent=2)

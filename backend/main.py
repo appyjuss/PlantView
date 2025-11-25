@@ -35,7 +35,11 @@ app.cors_origins = [origin.strip() for origin in ALLOWED_ORIGINS]
 app.config['CORS_ORIGINS'] = app.cors_origins
 
 # Initialize rate limiter with the app
-limiter.init_app(app)
+if os.getenv('ENV') != 'testing':
+    limiter.init_app(app)
+else:
+    # In testing mode, disable rate limiting
+    app.config['RATELIMIT_ENABLED'] = False
 
 # Register blueprints
 app.register_blueprint(auth_bp)
