@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+const API_BASE = 'http://localhost:8080/api';
 
 type RefreshFn = () => Promise<boolean>;
 type LogoutFn = () => void;
@@ -18,15 +18,22 @@ function isJsonResponse(res: Response) {
 
 export async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
   const url = typeof input === 'string' ? input : (input as Request).url;
+  console.log("apiFetch called with url:", url);
   const opts: RequestInit = { ...init, credentials: 'include' };
 
-  // Don't set JSON headers for FormData
-  if (opts.body && !(opts.body instanceof FormData) && typeof opts.body === 'object') {
-    opts.headers = { ...(opts.headers || {}), 'Content-Type': 'application/json' };
-    try {
-      opts.body = JSON.stringify(opts.body as any);
-    } catch (e) {
-      // leave body as-is
+  // Set JSON content type and stringify body if it's an object
+  if (opts.body && !(opts.body instanceof FormData)) {
+    if (typeof opts.body === 'string') {
+      // Already a string, ensure it has correct header
+      opts.headers = { ...(opts.headers || {}), 'Content-Type': 'application/json' };
+    } else {
+      // It's an object, stringify it
+      opts.headers = { ...(opts.headers || {}), 'Content-Type': 'application/json' };
+      try {
+        opts.body = JSON.stringify(opts.body as any);
+      } catch (e) {
+        // leave body as-is
+      }
     }
   }
 
