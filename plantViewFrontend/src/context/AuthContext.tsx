@@ -60,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signup = async (_name: string, email: string, password: string = "password") => {
-    // For now, reuse login. In a real app you'd POST to /API/signup
+    // For now, reuse login. In a real app you'd POST to /api/signup
     return login(email, password);
   };
 
