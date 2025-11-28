@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { saveDetection } from "../../lib/mockDetections";
+import { apiFetch } from "../../lib/api";
 
 export default function UploadForm({ onComplete }: { onComplete?: (d: any) => void }) {
   const [file, setFile] = useState<File | null>(null);
@@ -17,10 +18,9 @@ export default function UploadForm({ onComplete }: { onComplete?: (d: any) => vo
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('/API/upload', {
+      const response = await apiFetch('/API/upload', {
         method: 'POST',
         body: formData,
-        credentials: 'include',
       });
 
       if (!response.ok) {
