@@ -98,7 +98,6 @@ export async function apiCall(
           reject(error || new Error('Token refresh failed'));
           return;
         }
-        
         const retryHeaders = new Headers(fetchOptions.headers);
         retryHeaders.set('Content-Type', 'application/json');
         retryHeaders.set('Authorization', `Bearer ${token}`);

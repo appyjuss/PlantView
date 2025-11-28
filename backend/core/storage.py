@@ -17,8 +17,9 @@ def supabase_upload_file(file_data, filename, content_type, user_id):
         filename: Name of the file
         content_type: MIME type of the file
         user_id: ID of the user uploading the file
-        
-    Returns the file key or None on error.
+    
+    Returns:
+        str or None: The file key on success, None on error.
     """
     if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
         return None
