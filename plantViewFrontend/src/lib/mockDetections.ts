@@ -90,6 +90,7 @@ export async function reprocessDetection(id: string): Promise<Detection | undefi
     const response = await fetch("/API/upload", {
       method: "POST",
       body: formData,
+      credentials: 'include',
     });
 
     if (!response.ok) {

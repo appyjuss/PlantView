@@ -20,6 +20,7 @@ export default function UploadForm({ onComplete }: { onComplete?: (d: any) => vo
       const response = await fetch('/API/upload', {
         method: 'POST',
         body: formData,
+        credentials: 'include',
       });
 
       if (!response.ok) {
