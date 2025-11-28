@@ -34,21 +34,32 @@ export default function UploadForm({ onComplete }: { onComplete?: (d: any) => vo
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        throw new Error(`Upload failed: ${response.statusText}`);
       }
 
-      // Mock response for now (backend will return detection data)
-      const mockDetection = {
-        id: `detection-${Date.now()}`,
-        filename: file.name,
-        thumbnailDataUrl: URL.createObjectURL(file),
+      const data = await response.json();
+      
+      // Create detection object with prediction results (use persistent server URL)
+      const detection = {
+        id: String(Date.now()) + Math.random().toString(36).slice(2, 9),
+        createdAt: new Date().toISOString(),
+        status: 'done' as const,
+        imageDataUrl: data.file_url, // <- persistent URL served by backend
+        thumbnailDataUrl: data.file_url, // you can generate a proper thumbnail if needed
+        file_url: data.file_url,
         result: [
-          { label: 'Healthy', confidence: 0.95 }
+          {
+            label: data.prediction.class_name,
+            confidence: data.prediction.confidence,
+          }
         ],
-        timestamp: new Date().toISOString()
+        modelVersion: data.prediction.model_version ?? "server",
+        fileName: data.file,
       };
+      //Save detection to history storage
+      saveDetection(detection);
 
-      onComplete?.(mockDetection);
+      onComplete?.(detection);
       setFile(null);
       if (fileRef.current) fileRef.current.value = "";
     } catch (err) {
@@ -81,7 +92,6 @@ export default function UploadForm({ onComplete }: { onComplete?: (d: any) => vo
         className="hidden"
         onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         disabled={loading}
-        aria-hidden={loading}
       />
 
       <div className="flex items-center gap-3">
@@ -103,8 +113,13 @@ export default function UploadForm({ onComplete }: { onComplete?: (d: any) => vo
         </div>
       )}
 
+      {error && (
+        <div className="text-sm text-red-600">{error}</div>
+      )}
+
       <div className="mt-3">
         <button
+          type="submit"
           disabled={!file || loading}
           className={`inline-flex items-center gap-2 px-4 py-2 rounded font-medium ${
             loading ? "bg-slate-300 text-slate-700 cursor-not-allowed" : "bg-emerald-600 text-white hover:bg-emerald-700"
