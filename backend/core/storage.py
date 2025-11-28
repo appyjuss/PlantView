@@ -8,9 +8,16 @@ SUPABASE_SERVICE_ROLE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
 SUPABASE_BUCKET = os.getenv('SUPABASE_BUCKET', 'uploads')
 
 
-def supabase_upload_file(file_stream, filename, content_type, user_id):
+def supabase_upload_file(file_data, filename, content_type, user_id):
     """
     Uploads a file to Supabase Storage bucket with private access.
+    
+    Args:
+        file_data: File content as bytes
+        filename: Name of the file
+        content_type: MIME type of the file
+        user_id: ID of the user uploading the file
+        
     Returns the file key or None on error.
     """
     if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
@@ -20,7 +27,7 @@ def supabase_upload_file(file_stream, filename, content_type, user_id):
         "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
         "Content-Type": content_type
     }
-    resp = requests.post(upload_url, headers=headers, data=file_stream)
+    resp = requests.post(upload_url, headers=headers, data=file_data)
     if resp.status_code in (200, 201):
         return f"{user_id}/{filename}"
     return None

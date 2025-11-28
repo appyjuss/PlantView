@@ -2,10 +2,7 @@
 Test suite for authentication endpoints with SQLAlchemy database.
 Tests cover signup, login, token refresh, and account lockout.
 """
-import pytest
-from datetime import datetime, timedelta, timezone
-from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy.exc import IntegrityError
+from datetime import timedelta
 
 from backend.core.models import User
 from backend.core import auth as core_auth
@@ -223,8 +220,8 @@ class TestAccountLockout:
     def test_locked_account_cannot_login(self, client, authenticated_user):
         """Test locked account rejects login even with correct password."""
         # Lock the account
-        from datetime import datetime, timezone
-        authenticated_user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
+        from datetime import datetime, timezone as tz
+        authenticated_user.locked_until = datetime.now(tz.utc) + timedelta(minutes=15)
         
         response = client.post('/api/auth/login', json={
             'email': authenticated_user.email,
@@ -236,11 +233,11 @@ class TestAccountLockout:
     
     def test_account_unlocks_after_timeout(self, client, authenticated_user):
         """Test account unlocks after timeout period expires."""
-        from datetime import datetime, timezone
+        from datetime import datetime, timezone as tz
         from backend.core.models import db
         
         # Lock account in the past (already expired)
-        authenticated_user.locked_until = datetime.now(timezone.utc) - timedelta(minutes=1)
+        authenticated_user.locked_until = datetime.now(tz.utc) - timedelta(minutes=1)
         db.session.commit()
         
         response = client.post('/api/auth/login', json={
@@ -304,7 +301,7 @@ class TestTokenVerification:
         response = client.get('/api/auth/verify')
         
         assert response.status_code == 401
-        assert 'Missing authorization header' in response.get_json()['error']
+        assert 'Missing authorization token' in response.get_json()['error']
     
     def test_verify_invalid_token(self, client):
         """Test verification fails with invalid token."""

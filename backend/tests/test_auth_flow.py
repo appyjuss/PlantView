@@ -3,7 +3,6 @@ Comprehensive tests for the authentication flow.
 Tests cover signup, login, token refresh, and protected endpoints.
 """
 import pytest
-import json
 import os
 import sys
 from datetime import datetime, timedelta, timezone
@@ -493,7 +492,7 @@ class TestTokenValidation:
         access_token = signup_response.get_json()['access_token']
         
         payload = core_auth.verify_jwt_token(access_token, expected_type='access')
-        assert payload['user_id'] == payload['user_id']
+        assert payload['user_id'] is not None
         assert payload['email'] == 'test@example.com'
 
 
@@ -510,7 +509,6 @@ class TestCompleteAuthFlow:
         assert signup_response.status_code == 201
         signup_data = signup_response.get_json()
         access_token = signup_data['access_token']
-        refresh_token = signup_data['refresh_token']
         
         # Step 2: Verify token immediately after signup
         verify_response = client.get(
@@ -534,7 +532,6 @@ class TestCompleteAuthFlow:
         })
         assert login_response.status_code == 200
         login_data = login_response.get_json()
-        new_access_token = login_data['access_token']
         new_refresh_token = login_data['refresh_token']
         
         # Step 5: Refresh the access token
