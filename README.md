@@ -21,53 +21,47 @@ python setup.py
 The setup script will:
 - Install Python dependencies
 - Create `.env` file
-- Start PostgreSQL and Redis containers
-- Initialize database
-- Run tests
+# PlantView 🌱
 
-### 2. Start Backend
+AI-powered plant disease detection web application with React frontend and Flask backend.
+
+---
+
+## Quick Start (Supabase-backed)
+
+### Prerequisites
+- Python 3.10+
+- Node.js 18+ (for frontend)
+
+### 1. Clone & install
 ```bash
-python -m backend.main
+git clone https://github.com/appyjuss/PlantView.git
+cd PlantView
+python -m pip install -r backend/requirements.txt
 ```
+
+### 2. Configure environment (Supabase)
+1. Create a Supabase project at https://app.supabase.com and copy the `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`.
+2. Copy `.env.example` to `backend/.env` and fill in the values (do not commit `.env`).
+
+### 3. Initialize DB & run backend
+```pwsh
+# Activate your Python venv, then:
+python -m flask --app backend.main db migrate -m "initial schema"
+python -m flask --app backend.main db upgrade
+python -m flask --app backend.main run
+```
+
 Backend runs on `http://localhost:5000`
 
-### 3. Start Frontend
+### 4. Start Frontend
 ```bash
 cd plantViewFrontend
 npm install
 npm run dev
 ```
+
 Frontend runs on `http://localhost:5173`
-
----
-
-## Manual Setup (If Automated Setup Fails)
-
-### 1. Install Dependencies
-```bash
-pip install -r backend/requirements.txt
-```
-
-### 2. Configure Environment
-Copy `.env.example` to `.env` and update values:
-```bash
-cp .env.example .env
-```
-
-### 3. Start Services
-```bash
-docker-compose up -d
-```
-
-### 4. Initialize Database
-```bash
-flask --app backend.main init-db
-```
-
-### 5. Create Admin User (Optional)
-```bash
-flask --app backend.main create-admin
-```
 
 ---
 
@@ -88,9 +82,8 @@ PlantView/
 │   │   ├── context/        # React context (auth)
 │   │   └── lib/            # API client, utilities
 │   └── vite.config.ts
-├── docker-compose.yml      # Docker services
-├── setup.py                # Automated setup script
-└── .env.example            # Environment template
+├── migrations/             # Alembic migrations
+├── .env.example            # Environment template
 ```
 
 ---
@@ -105,29 +98,21 @@ PlantView/
 - `POST /api/auth/logout` - Logout
 
 ### Protected Routes
-All endpoints require `Authorization: Bearer <token>` header.
+All endpoints require `Authorization: Bearer <token>` header (unless you use cookies after server-side changes).
 
 ---
 
 ## Database
 
-### Connection Info
-- **Host**: localhost
-- **Port**: 5432
-- **User**: postgres
-- **Password**: password
-- **Database**: plantview_db
+This project uses Supabase (hosted Postgres) as the primary database. After creating a Supabase project, copy your project's connection string into `backend/.env` as `DATABASE_URL`.
 
-### Useful Commands
-```bash
-# Connect to database
-docker exec -it plantview-postgres psql -U postgres -d plantview_db
-
-# View tables
-\dt
-
-# View users
-SELECT * FROM users;
+### Verify tables
+Use the Supabase SQL editor to run:
+```sql
+SELECT tablename
+FROM pg_catalog.pg_tables
+WHERE schemaname = 'public'
+ORDER BY tablename;
 ```
 
 ---
@@ -156,26 +141,9 @@ pytest backend/tests --cov=backend --cov-report=html
 ### Backend Commands
 ```bash
 # Run development server
-python -m backend.main
-
-# Initialize database
-flask --app backend.main init-db
-
-# Create admin user
-flask --app backend.main create-admin
-
-# List all users
-flask --app backend.main list-users
+python -m flask --app backend.main run
 ```
 
-### Frontend Commands
-```bash
-cd plantViewFrontend
-
-# Install dependencies
-npm install
-
-# Start dev server
 npm run dev
 
 # Build for production
