@@ -7,9 +7,14 @@ import os
 import sys
 from pathlib import Path
 
-# Add parent directory to path for imports
-backend_path = str(Path(__file__).parent.parent)
-sys.path.insert(0, backend_path)
+# Add project root (parent of backend/) to path so "import backend.*" works
+project_root = str(Path(__file__).resolve().parent.parent.parent)
+sys.path.insert(0, project_root)
+
+# Force tests to use an in-memory SQLite DB by default to avoid connecting to
+# any local Postgres or remote Supabase instance. This can be overridden with
+# the `TEST_DATABASE_URL` environment variable when needed.
+os.environ.setdefault('DATABASE_URL', os.getenv('TEST_DATABASE_URL', 'sqlite:///:memory:'))
 
 from backend.main import app
 from backend.core.models import db, User
@@ -69,7 +74,35 @@ def authenticated_user(test_app, init_db):
         )
         db.session.add(user)
         db.session.commit()
-        return user
+        # Return a proxy that reads/writes the DB on demand. This lets tests
+        # access and mutate attributes (e.g., `locked_until`) while keeping a
+        # stable object reference.
+        class UserProxy:
+            def __init__(self, uid):
+                object.__setattr__(self, '_id', uid)
+
+            @property
+            def id(self):
+                return object.__getattribute__(self, '_id')
+
+            def __getattr__(self, name):
+                u = User.query.get(self._id)
+                if u is None:
+                    raise AttributeError(name)
+                return getattr(u, name)
+
+            def __setattr__(self, name, value):
+                if name == '_id':
+                    object.__setattr__(self, name, value)
+                    return
+                u = User.query.get(self._id)
+                if u is None:
+                    raise AttributeError(name)
+                setattr(u, name, value)
+                db.session.add(u)
+                db.session.commit()
+
+        return UserProxy(user.id)
 
 
 @pytest.fixture

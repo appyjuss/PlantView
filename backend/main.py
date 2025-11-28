@@ -6,7 +6,10 @@ from dotenv import load_dotenv
 
 # Load .env from project root (parent of backend/)
 project_root = Path(__file__).parent.parent
+# Load .env from repository root (if present)
 load_dotenv(project_root / '.env')
+# Also load .env from the backend folder (common local dev location)
+load_dotenv(Path(__file__).parent / '.env')
 
 # Use relative imports; run the app as a package to ensure imports resolve:
 #   from the repository root: `python -m backend.main`
@@ -20,10 +23,12 @@ from .core.cli import register_cli_commands
 # Create the Flask app and register routes
 app = create_app()
 
-# Configure Supabase (optional)
-app.config['SUPABASE_URL'] = os.getenv('SUPABASE_URL')
-app.config['SUPABASE_SERVICE_ROLE_KEY'] = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
-app.config['SUPABASE_BUCKET'] = os.getenv('SUPABASE_BUCKET', 'uploads')
+# Configure Supabase (optional) from env or loaded .env files
+app.config['SUPABASE_URL'] = os.getenv('SUPABASE_URL') or app.config.get('SUPABASE_URL')
+# Support either name: SUPABASE_SERVICE_KEY or SUPABASE_SERVICE_ROLE_KEY
+app.config['SUPABASE_SERVICE_KEY'] = os.getenv('SUPABASE_SERVICE_KEY') or os.getenv('SUPABASE_SERVICE_ROLE_KEY') or app.config.get('SUPABASE_SERVICE_KEY') or app.config.get('SUPABASE_SERVICE_ROLE_KEY')
+app.config['SUPABASE_SERVICE_ROLE_KEY'] = os.getenv('SUPABASE_SERVICE_ROLE_KEY') or os.getenv('SUPABASE_SERVICE_KEY') or app.config.get('SUPABASE_SERVICE_ROLE_KEY') or app.config.get('SUPABASE_SERVICE_KEY')
+app.config['SUPABASE_BUCKET'] = os.getenv('SUPABASE_BUCKET', app.config.get('SUPABASE_BUCKET', 'uploads'))
 
 # Environment and security
 app.config['ENV'] = os.getenv('ENV', 'development')
