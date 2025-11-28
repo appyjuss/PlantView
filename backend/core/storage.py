@@ -42,7 +42,14 @@ def supabase_upload_file(file_data, filename, content_type, user_id):
         logger.warning("Supabase upload attempted but SUPABASE_URL or SERVICE_ROLE_KEY not set")
         return None
 
-    upload_url = f"{resolved_url}/storage/v1/object/{SUPABASE_BUCKET}/{user_id}/{filename}"
+    # Resolve bucket at call time too (allow override via app config)
+    try:
+        from flask import current_app
+        resolved_bucket = os.getenv('SUPABASE_BUCKET') or current_app.config.get('SUPABASE_BUCKET', SUPABASE_BUCKET)
+    except Exception:
+        resolved_bucket = os.getenv('SUPABASE_BUCKET') or SUPABASE_BUCKET
+
+    upload_url = f"{resolved_url}/storage/v1/object/{resolved_bucket}/{user_id}/{filename}"
     # Log masked info about the resolved key to catch truncation/mismatch issues
     try:
         k = resolved_key
@@ -59,7 +66,8 @@ def supabase_upload_file(file_data, filename, content_type, user_id):
     if upsert_enabled:
         headers['x-upsert'] = 'true'
     try:
-        resp = requests.post(upload_url, headers=headers, data=file_stream, timeout=30)
+        # `file_data` is expected to be bytes or a file-like object (we pass bytes from the route)
+        resp = requests.post(upload_url, headers=headers, data=file_data, timeout=30)
     except Exception as e:
         logger.exception("Exception when POSTing to Supabase upload URL=%s for user=%s filename=%s", upload_url, user_id, filename)
         return None
