@@ -1,5 +1,5 @@
 import os
-from flask import Flask, flash, request, redirect, url_for, send_from_directory, jsonify
+from flask import Flask, flash, request, redirect, url_for, send_from_directory, jsonify, session
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
 from prediction import predict_disease
@@ -10,9 +10,14 @@ UPLOAD_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'u
 app = Flask(__name__, static_folder = "../plantviewFrontend/dist", static_url_path='/')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Set a secret key for sessions (for production, use env var)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+
 cors = CORS(app,
             resources={r"/API/*": {"origins": "http://localhost:5173"}},
             supports_credentials=True)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -21,6 +26,46 @@ def allowed_file(filename):
 @app.route('/')
 def home():
     return send_from_directory(app.static_folder, "index.html")
+
+@app.route('/API/login', methods=['POST'])
+def login():
+    """Simple login endpoint that sets an httpOnly cookie for testing auth."""
+    data = request.get_json() or {}
+    email = data.get('email', '')
+    password = data.get('password', '')
+    
+    # For testing: accept any non-empty email/password
+    if email and password:
+        # Store user info in session (Flask will create httpOnly cookie)
+        session['user_id'] = email  # In real app, validate and store user ID
+        session['email'] = email
+        
+        resp = jsonify({
+            "status": "success",
+            "message": f"Logged in as {email}",
+            "user": {"id": email, "email": email, "name": email.split('@')[0]}
+        })
+        return resp, 200
+    else:
+        return jsonify({"status": "error", "message": "Missing email or password"}), 400
+
+
+@app.route('/API/logout', methods=['POST'])
+def logout():
+    """Logout endpoint that clears the session cookie."""
+    session.clear()
+    return jsonify({"status": "success", "message": "Logged out"}), 200
+
+
+@app.route('/API/current-user', methods=['GET'])
+def current_user():
+    """Get current user from session; returns 401 if not authenticated."""
+    if 'email' in session:
+        return jsonify({
+            "user": {"id": session.get('user_id'), "email": session.get('email'), "name": session.get('email', '').split('@')[0]}
+        }), 200
+    else:
+        return jsonify({"status": "error", "message": "Not authenticated"}), 401
 
 @app.route('/API/upload', methods=['GET', 'POST'])
 def upload_file():
