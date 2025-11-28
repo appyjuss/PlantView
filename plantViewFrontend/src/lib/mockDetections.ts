@@ -87,7 +87,7 @@ export async function reprocessDetection(id: string): Promise<Detection | undefi
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch("/API/upload", {
+    const response = await fetch("/api/upload", {
       method: "POST",
       body: formData,
     });

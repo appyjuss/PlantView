@@ -91,7 +91,7 @@ def require_auth(f):
                 return jsonify({'error': 'Invalid authorization header'}), 401
 
         if not token:
-            return jsonify({'error': 'Missing authorization token'}), 401
+            return jsonify({'error': 'Missing authorization header'}), 401
 
         payload = verify_jwt_token(token, expected_type='access')
         if not payload:

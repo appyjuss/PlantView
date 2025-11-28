@@ -71,6 +71,9 @@ def login():
         lock_until = user.locked_until
         if isinstance(lock_until, str):
             lock_until = datetime.datetime.fromisoformat(lock_until)
+        # Normalize naive datetimes to UTC-aware for safe comparison
+        if lock_until.tzinfo is None:
+            lock_until = lock_until.replace(tzinfo=datetime.timezone.utc)
         if datetime.datetime.now(datetime.timezone.utc) < lock_until:
             return jsonify({
                 'error': 'Account temporarily locked. Try again later.'
