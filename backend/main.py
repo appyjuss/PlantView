@@ -27,7 +27,7 @@ def allowed_file(filename):
 def home():
     return send_from_directory(app.static_folder, "index.html")
 
-@app.route('/API/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def login():
     """Simple login endpoint that sets an httpOnly cookie for testing auth."""
     data = request.get_json() or {}
@@ -50,14 +50,14 @@ def login():
         return jsonify({"status": "error", "message": "Missing email or password"}), 400
 
 
-@app.route('/API/logout', methods=['POST'])
+@app.route('/api/logout', methods=['POST'])
 def logout():
     """Logout endpoint that clears the session cookie."""
     session.clear()
     return jsonify({"status": "success", "message": "Logged out"}), 200
 
 
-@app.route('/API/current-user', methods=['GET'])
+@app.route('/api/current-user', methods=['GET'])
 def current_user():
     """Get current user from session; returns 401 if not authenticated."""
     if 'email' in session:
@@ -67,7 +67,7 @@ def current_user():
     else:
         return jsonify({"status": "error", "message": "Not authenticated"}), 401
 
-@app.route('/API/upload', methods=['GET', 'POST'])
+@app.route('/api/upload', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
         # check if the post request has the file part
@@ -105,3 +105,7 @@ def upload_file():
 @app.route('/uploads/<name>')
 def download_file(name):
     return send_from_directory(app.config['UPLOAD_FOLDER'], name)
+
+# Ensure Flask app runs when executed directly
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080, debug=True)
