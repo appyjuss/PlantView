@@ -12,7 +12,8 @@ export default function DetectionDetails({ id, onClose }: { id: string; onClose:
   async function reprocess() {
     setLoading(true);
     const updated = await reprocessDetection(id);
-    setDetection(updated);
+    const refreshed = getDetection(id);
+    setDetection(refreshed || updated);
     setLoading(false);
   }
 

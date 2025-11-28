@@ -74,15 +74,54 @@ export async function reprocessDetection(id: string): Promise<Detection | undefi
   const items = readStore();
   const idx = items.findIndex((d) => d.id === id);
   if (idx === -1) return undefined;
-  // new random result
-  const labels = ["Late blight", "Powdery mildew", "Bacterial spot", "Healthy"];
-  const label = randChoice(labels);
-  const confidence = +(0.6 + Math.random() * 0.4).toFixed(2);
-  items[idx].result = [{ label, confidence }];
-  items[idx].status = "done";
-  items[idx].modelVersion = "mock-v1";
+
+  // mark as pending while reprocessing
+  items[idx].status = "pending";
   writeStore(items);
-  return items[idx];
+
+  try {
+    // convert data URL back to File for upload
+    const blob = await fetch(items[idx].imageDataUrl).then((r) => r.blob());
+    const file = new File([blob], `reprocess_${id}.jpg`, { type: "image/jpeg" });
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/API/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Reprocess failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // update detection with new server prediction
+    items[idx].result = [
+      {
+        label: data.prediction.class_name,
+        confidence: data.prediction.confidence ?? 0,
+      },
+    ];
+    items[idx].status = "done";
+    items[idx].modelVersion = data.prediction.modelVersion ?? "server";
+    writeStore(items);
+
+    return items[idx];
+  } catch (err) {
+    console.error("Reprocess error:", err);
+    items[idx].status = "error";
+    writeStore(items);
+    return undefined;
+  }
+}
+
+export function saveDetection(d: Detection) {
+  const items = readStore();
+  items.unshift(d);
+  writeStore(items);
 }
 
 function readFileAsDataURL(file: File): Promise<string> {
