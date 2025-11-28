@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torchvision import models
 from torchvision.models import ResNet50_Weights
 import torchvision.transforms as transforms
@@ -19,7 +20,6 @@ NUM_CLASSES = len(idx_to_class)
 def load_model():
     model = models.resnet50(weights=ResNet50_Weights.DEFAULT)
     
-    num_of_classes = len(json.load(open(MAPPING_PATH, 'r')))
     model.fc = nn.Linear(model.fc.in_features, NUM_CLASSES)
     
     state_dict = torch.load(MODEL_PATH, map_location=torch.device('cpu'))
@@ -46,13 +46,16 @@ def predict_disease(image_path):
     
     with torch.no_grad():
         outputs = model(img_tensor)
-        _, predicted = torch.max(outputs, 1)
+        probabilities = F.softmax(outputs, dim=1)
+        confidence, predicted = torch.max(probabilities, 1)
     
     class_id = predicted.item()
+    confidence_score = float(confidence.item())
     class_name = idx_to_class[str(class_id)]
         
     return {
         "class_id": class_id,
+        "confidence": round(confidence_score, 4),
         "class_name": class_name
     }
 
