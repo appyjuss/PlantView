@@ -5,7 +5,7 @@ import datetime
 
 from ..core import storage
 from ..core import auth as core_auth
-from ..core.models import db, User
+from ..core.models import db
 
 auth_bp = Blueprint('auth', __name__)
 

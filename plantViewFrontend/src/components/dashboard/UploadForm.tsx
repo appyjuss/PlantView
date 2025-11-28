@@ -25,7 +25,7 @@ export default function UploadForm({ onComplete }: { onComplete?: (d: any) => vo
       const formData = new FormData();
       formData.append('file', file);
 
-          const response = await fetch(`${API_URL}/api/upload`, {
+      const response = await fetch(`${API_URL}/api/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

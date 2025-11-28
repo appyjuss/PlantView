@@ -42,7 +42,7 @@ python -m pip install -r backend/requirements.txt
 
 ### 2. Configure environment (Supabase)
 1. Create a Supabase project at https://app.supabase.com and copy the `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`.
-2. Copy `.env.example` to `backend/.env` and fill in the values (do not commit `.env`).
+2. Copy the `.env.example` file from the project root to `backend/.env` and fill in the values (do not commit `.env`).
 
 ### 3. Initialize DB & run backend
 ```pwsh

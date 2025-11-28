@@ -54,6 +54,8 @@ if __name__ == '__main__':
     try:
         os.makedirs(upload_folder, exist_ok=True)
     except Exception:
+        # Ignore directory creation errors - upload folder is optional
+        # when using Supabase storage or if folder already exists
         pass
 
     # Use debug only in development
