@@ -22,7 +22,7 @@ app = create_app()
 
 # Configure Supabase (optional)
 app.config['SUPABASE_URL'] = os.getenv('SUPABASE_URL')
-app.config['SUPABASE_SERVICE_KEY'] = os.getenv('SUPABASE_SERVICE_KEY')
+app.config['SUPABASE_SERVICE_ROLE_KEY'] = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
 app.config['SUPABASE_BUCKET'] = os.getenv('SUPABASE_BUCKET', 'uploads')
 
 # Environment and security
@@ -49,6 +49,8 @@ if __name__ == '__main__':
     try:
         os.makedirs(upload_folder, exist_ok=True)
     except Exception:
+        # Ignore directory creation errors - upload folder is optional
+        # when using Supabase storage or if folder already exists
         pass
 
     # Use debug only in development

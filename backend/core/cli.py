@@ -5,7 +5,6 @@ Run commands like: flask --app backend.main init-db
 import click
 from flask.cli import with_appcontext
 import os
-from pathlib import Path
 
 
 def register_cli_commands(app):

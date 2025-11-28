@@ -1,14 +1,14 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
+let refreshSubscribers: ((token: string | null, error?: Error) => void)[] = [];
 
-function onRefreshed(token: string) {
-  refreshSubscribers.forEach((callback) => callback(token));
+function onRefreshed(token: string | null, error?: Error) {
+  refreshSubscribers.forEach((callback) => callback(token, error));
   refreshSubscribers = [];
 }
 
-function addRefreshSubscriber(callback: (token: string) => void) {
+function addRefreshSubscriber(callback: (token: string | null, error?: Error) => void) {
   refreshSubscribers.push(callback);
 }
 
@@ -87,12 +87,17 @@ export async function apiCall(
       }
     } catch (error) {
       isRefreshing = false;
+      onRefreshed(null, error instanceof Error ? error : new Error('Token refresh failed'));
       throw error;
     }
   } else if (response.status === 401 && requiresAuth && isRefreshing) {
     // Queue request to retry after refresh completes
-    return new Promise((resolve) => {
-      addRefreshSubscriber((token: string) => {
+    return new Promise((resolve, reject) => {
+      addRefreshSubscriber((token: string | null, error?: Error) => {
+        if (error || !token) {
+          reject(error || new Error('Token refresh failed'));
+          return;
+        }
         const retryHeaders = new Headers(fetchOptions.headers);
         retryHeaders.set('Content-Type', 'application/json');
         retryHeaders.set('Authorization', `Bearer ${token}`);
@@ -189,8 +194,4 @@ export function setRefreshToken(token: string): void {
 export function clearTokens(): void {
   localStorage.removeItem('authToken');
   localStorage.removeItem('refreshToken');
-}
-
-export function clearToken(): void {
-  clearTokens();
 }

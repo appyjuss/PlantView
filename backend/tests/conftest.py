@@ -11,7 +11,7 @@ from pathlib import Path
 backend_path = str(Path(__file__).parent.parent)
 sys.path.insert(0, backend_path)
 
-from backend.main import app, app_context
+from backend.main import app
 from backend.core.models import db, User
 
 
