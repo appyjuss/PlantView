@@ -4,7 +4,8 @@ from werkzeug.utils import secure_filename
 
 from ..core.auth import require_auth
 from ..core.utils import allowed_file
-from ..core.storage import supabase_upload_file, supabase_get_signed_url
+from ..core.storage import supabase_upload_file, supabase_get_signed_url, create_upload_record
+from .. import prediction as predictor
 
 upload_bp = Blueprint('upload', __name__)
 
@@ -97,7 +98,29 @@ def upload_file():
                 current_app.logger.error("supabase_upload_file returned falsy for user=%s filename=%s", user_id, filename)
                 return jsonify({'error': 'Upload failed'}), 500
 
-            return jsonify({'success': True, 'file_key': file_key}), 201
+            # Run model inference on the uploaded image bytes (CPU inference)
+            try:
+                detection = predictor.predict_disease_from_bytes(file_contents)
+            except Exception:
+                current_app.logger.exception("Model prediction failed for user=%s filename=%s", user_id, filename)
+                detection = None
+
+            # Persist record with detection_result (may be None on model failure)
+            try:
+                record = create_upload_record(user_id=user_id, filename=filename, file_path=file_key, detection_result=detection)
+            except Exception:
+                current_app.logger.exception("Failed to create upload record for user=%s filename=%s", user_id, filename)
+
+            # Try to generate a signed URL for immediate client access and include it in response
+            try:
+                file_url = supabase_get_signed_url(file_key)
+                if not file_url:
+                    current_app.logger.warning("signed_url not available immediately for file_key=%s user=%s", file_key, user_id)
+            except Exception:
+                current_app.logger.exception("Error generating signed URL for file_key=%s user=%s", file_key, user_id)
+                file_url = None
+
+            return jsonify({'success': True, 'file_key': file_key, 'file_url': file_url, 'detection': detection}), 201
         except Exception:
             current_app.logger.exception("Exception while uploading file for user=%s filename=%s", user_id, filename)
             return jsonify({'error': 'Upload failed'}), 500
@@ -106,7 +129,7 @@ def upload_file():
         return jsonify({'error': 'Upload failed'}), 500
 
 
-@upload_bp.route('/api/uploads/<file_key>', methods=['GET'])
+@upload_bp.route('/api/uploads/<path:file_key>', methods=['GET'])
 @require_auth
 def get_file(file_key):
     """Download a file from storage."""

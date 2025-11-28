@@ -101,7 +101,14 @@ def supabase_get_signed_url(file_key, expires_in=3600):
         logger.warning("Supabase signed URL requested but SUPABASE_URL or SERVICE_ROLE_KEY not set")
         return None
 
-    url = f"{resolved_url}/storage/v1/object/sign/{SUPABASE_BUCKET}/{file_key}?expiresIn={expires_in}"
+    # Resolve bucket at call time (mirror behavior in upload)
+    try:
+        from flask import current_app
+        resolved_bucket = os.getenv('SUPABASE_BUCKET') or current_app.config.get('SUPABASE_BUCKET', SUPABASE_BUCKET)
+    except Exception:
+        resolved_bucket = os.getenv('SUPABASE_BUCKET') or SUPABASE_BUCKET
+
+    url = f"{resolved_url}/storage/v1/object/sign/{resolved_bucket}/{file_key}?expiresIn={expires_in}"
     headers = {"Authorization": f"Bearer {resolved_key}"}
     try:
         resp = requests.post(url, headers=headers, timeout=30)
@@ -109,6 +116,7 @@ def supabase_get_signed_url(file_key, expires_in=3600):
         logger.exception("Exception when requesting signed URL for key=%s", file_key)
         return None
 
+    # Log detailed response on failure to help debugging
     if resp.status_code == 200:
         try:
             data = resp.json()
@@ -117,7 +125,7 @@ def supabase_get_signed_url(file_key, expires_in=3600):
             logger.exception("Failed to parse JSON signed URL response for key=%s: %s", file_key, resp.text)
             return None
 
-    logger.error("Supabase signed URL request failed for key=%s status=%s body=%s", file_key, resp.status_code, (resp.text or resp.content))
+    logger.warning("Supabase signed URL request failed for key=%s status=%s body=%s", file_key, resp.status_code, (resp.text or resp.content))
     return None
 
 
