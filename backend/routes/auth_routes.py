@@ -1,20 +1,13 @@
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
+from sqlalchemy.exc import IntegrityError
 import datetime
 
 from ..core import storage
 from ..core import auth as core_auth
+from ..core.models import db, User
 
 auth_bp = Blueprint('auth', __name__)
-
-# Create limiter instance - will be initialized in main.py
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
-    storage_uri="memory://"
-)
 
 
 @auth_bp.route('/api/auth/signup', methods=['POST'])
@@ -36,29 +29,29 @@ def signup():
     if not is_valid:
         return jsonify({'error': message}), 400
 
-    users = storage.load_users()
-    if email in users:
+    # Check if user exists
+    if storage.get_user_by_email(email):
         return jsonify({'error': 'User already exists'}), 409
 
-    user_id = str(len(users) + 1)
-    users[email] = {
-        'id': user_id,
-        'email': email,
-        'password': generate_password_hash(password),
-        'created_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        'failed_login_attempts': 0,
-        'locked_until': None
-    }
-    storage.save_users(users)
-
-    access_token = core_auth.create_jwt_token(user_id, email, token_type='access')
-    refresh_token = core_auth.create_jwt_token(user_id, email, token_type='refresh')
-    
-    return jsonify({
-        'access_token': access_token,
-        'refresh_token': refresh_token,
-        'user': {'id': user_id, 'email': email}
-    }), 201
+    try:
+        # Create new user with hashed password
+        user = storage.create_user(email, generate_password_hash(password))
+        
+        access_token = core_auth.create_jwt_token(user.id, email, token_type='access')
+        refresh_token = core_auth.create_jwt_token(user.id, email, token_type='refresh')
+        
+        return jsonify({
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+            'user': {'id': user.id, 'email': user.email}
+        }), 201
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({'error': 'User already exists'}), 409
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Signup error: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 
 @auth_bp.route('/api/auth/login', methods=['POST'])
@@ -71,41 +64,42 @@ def login():
     email = data.get('email', '').strip().lower()
     password = data.get('password', '')
 
-    users = storage.load_users()
-    user = users.get(email)
+    user = storage.get_user_by_email(email)
 
     # Check if account is locked
-    if user and user.get('locked_until'):
-        lock_until = datetime.datetime.fromisoformat(user['locked_until'])
+    if user and user.locked_until:
+        lock_until = user.locked_until
+        if isinstance(lock_until, str):
+            lock_until = datetime.datetime.fromisoformat(lock_until)
         if datetime.datetime.now(datetime.timezone.utc) < lock_until:
             return jsonify({
                 'error': 'Account temporarily locked. Try again later.'
             }), 429
 
-    if not user or not check_password_hash(user['password'], password):
+    if not user or not check_password_hash(user.password_hash, password):
         # Increment failed attempts
         if user:
-            user['failed_login_attempts'] = user.get('failed_login_attempts', 0) + 1
+            user.failed_login_attempts = user.failed_login_attempts + 1
             # Lock account after 5 failed attempts for 15 minutes
-            if user['failed_login_attempts'] >= 5:
-                user['locked_until'] = (
+            if user.failed_login_attempts >= 5:
+                user.locked_until = (
                     datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15)
-                ).isoformat()
-            storage.save_users(users)
+                )
+            storage.update_user(user)
         return jsonify({'error': 'Invalid email or password'}), 401
 
     # Reset failed attempts on successful login
-    user['failed_login_attempts'] = 0
-    user['locked_until'] = None
-    storage.save_users(users)
+    user.failed_login_attempts = 0
+    user.locked_until = None
+    storage.update_user(user)
 
-    access_token = core_auth.create_jwt_token(user['id'], email, token_type='access')
-    refresh_token = core_auth.create_jwt_token(user['id'], email, token_type='refresh')
+    access_token = core_auth.create_jwt_token(user.id, email, token_type='access')
+    refresh_token = core_auth.create_jwt_token(user.id, email, token_type='refresh')
     
     return jsonify({
         'access_token': access_token,
         'refresh_token': refresh_token,
-        'user': {'id': user['id'], 'email': email}
+        'user': {'id': user.id, 'email': user.email}
     }), 200
 
 

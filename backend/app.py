@@ -1,17 +1,27 @@
 import os
 from flask import Flask, send_from_directory
 from flask_cors import CORS
+from flask_migrate import Migrate
+from .core.models import db
 
 
 def create_app(static_folder: str = "../plantviewFrontend/dist", static_url_path: str = "/"):
     """Create and configure the Flask application."""
     app = Flask(__name__, static_folder=static_folder, static_url_path=static_url_path)
 
+    # Database configuration
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
+        'DATABASE_URL',
+        'postgresql://postgres:password@localhost:5432/plantview_db'
+    )
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQLALCHEMY_ECHO'] = os.getenv('DB_ECHO', 'false').lower() == 'true'
+
     # Basic configuration
     app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', '../uploads')
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-change-in-production')
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
     app.config['JWT_ALGORITHM'] = os.getenv('JWT_ALGORITHM', 'HS256')
-    app.config['JWT_EXPIRATION_HOURS'] = int(os.getenv('JWT_EXPIRATION_HOURS', '24'))
+    app.config['JWT_EXPIRATION_HOURS'] = int(os.getenv('JWT_EXPIRATION_HOURS', '1'))
     app.config['JWT_REFRESH_EXPIRATION_HOURS'] = int(os.getenv('JWT_REFRESH_EXPIRATION_HOURS', '168'))
 
     # Get allowed origins from config (set in main.py) or use defaults for development
@@ -31,6 +41,10 @@ def create_app(static_folder: str = "../plantviewFrontend/dist", static_url_path
         supports_credentials=True,
         methods=["GET", "POST", "OPTIONS"]
     )
+
+    # Initialize database and migrations
+    db.init_app(app)
+    Migrate(app, db)
 
     return app
 
