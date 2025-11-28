@@ -10,7 +10,9 @@ UPLOAD_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'u
 app = Flask(__name__, static_folder = "../plantviewFrontend/dist", static_url_path='/')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-cors = CORS(app, origins='*')
+cors = CORS(app,
+            resources={r"/API/*": {"origins": "http://localhost:5173"}},
+            supports_credentials=True)
 
 def allowed_file(filename):
     return '.' in filename and \
