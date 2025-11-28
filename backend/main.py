@@ -15,7 +15,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
 cors = CORS(app,
-            resources={r"/API/*": {"origins": "http://localhost:5173"}},
+            resources={r"/api/*": {"origins": "http://localhost:5173"}},
             supports_credentials=True)
 app.config['CORS_HEADERS'] = 'Content-Type'
 

@@ -1,4 +1,4 @@
-const API_BASE = '/API';
+const API_BASE = '/api';
 
 type RefreshFn = () => Promise<boolean>;
 type LogoutFn = () => void;

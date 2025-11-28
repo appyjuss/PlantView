@@ -39,14 +39,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string = "password") => {
+    console.log("Login called with:", { email, password });
     setLoading(true);
     try {
+      console.log("Calling apiFetch with API_BASE:", API_BASE);
       const resp = await apiFetch(`${API_BASE}/login`, {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
+      console.log("Login response status:", resp.status);
       if (resp.ok) {
         const data = await resp.json();
+        console.log("Login response data:", data);
         if (data.user) setUser(data.user);
       } else {
         throw new Error(`Login failed: ${resp.statusText}`);
