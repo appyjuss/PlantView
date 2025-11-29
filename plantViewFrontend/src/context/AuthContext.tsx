@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(user);
         }
       } catch (error) {
-        console.error("Auth initialization error:", error);
+        // Auth initialization error - clearing tokens
         clearTokens();
       } finally {
         setLoading(false);
@@ -77,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await apiLogout();
     } catch (error) {
-      console.error("Logout error:", error);
+      // Logout error ignored
     } finally {
       clearTokens();
       setUser(null);

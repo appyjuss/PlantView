@@ -111,7 +111,7 @@ export async function reprocessDetection(id: string): Promise<Detection | undefi
 
     return items[idx];
   } catch (err) {
-    console.error("Reprocess error:", err);
+    // Reprocess error - mark as failed and persist state
     items[idx].status = "error";
     writeStore(items);
     return undefined;

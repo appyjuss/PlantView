@@ -57,7 +57,7 @@ export default function UploadForm({ onComplete }: { onComplete?: (d: any) => vo
         }
       } catch (err) {
         // non-fatal; continue without file URL
-        console.warn('Failed to fetch signed file URL', err);
+          // Failed to fetch signed file URL - silently ignore in UI
       }
 
       const prediction = data.detection;

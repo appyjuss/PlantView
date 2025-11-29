@@ -64,7 +64,7 @@ export default function HistoryList({ onOpen }: { onOpen?: (id: string) => void 
           setItems(serverItems);
         }
       } catch (err) {
-        console.error('[HistoryList] Exception:', err);
+        // Exception during history fetch - silently fallback to local detections
         if (isMounted) setItems(listDetections());
       }
     };
