@@ -121,9 +121,23 @@ def supabase_get_signed_url(file_key, expires_in=3600):
     if resp.status_code == 200:
         try:
             data = resp.json()
-            return data.get('signedURL')
+            # Supabase returns 'signedUrl' (camelCase), not 'signedURL'
+            signed_url = data.get('signedUrl') or data.get('signedURL')
+            
+            if signed_url:
+                # If the signed URL is relative (starts with /), prepend the Supabase base URL
+                if signed_url.startswith('/'):
+                    signed_url = f"{resolved_url}/storage/v1{signed_url}"
+                    logger.info(f"Constructed full signed URL for key={file_key}: {signed_url[:100]}...")
+                else:
+                    logger.info(f"Generated signed URL for key={file_key}: {signed_url[:100]}...")
+            else:
+                logger.warning(f"No signedUrl in response for key={file_key}: {data}")
+                
+            return signed_url
         except Exception:
             logger.exception("Failed to parse JSON signed URL response for key=%s: %s", file_key, resp.text)
+            return None
             return None
 
     logger.warning("Supabase signed URL request failed for key=%s status=%s body=%s", file_key, resp.status_code, (resp.text or resp.content))

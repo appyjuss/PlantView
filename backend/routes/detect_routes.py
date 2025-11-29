@@ -102,13 +102,26 @@ def detect_image():
                 f"content_type={content_type} size={file_size}"
             )
 
-        # Handle JSON with signed_url or image_url
+        # Handle JSON with signed_url or image_url or file_key
         elif request.is_json or request.form:
             data = request.get_json(silent=True) or {}
             signed_url = data.get('signed_url') or data.get('image_url') or request.form.get('signed_url') or request.form.get('image_url')
+            file_key = data.get('file_key') or request.form.get('file_key')
+            
+            # If file_key is provided, regenerate a fresh signed URL
+            if file_key:
+                current_app.logger.info(f"Reprocessing from file_key: request_id={request_id} file_key={file_key}")
+                try:
+                    signed_url = supabase_get_signed_url(file_key)
+                    if not signed_url:
+                        return APIResponse.error('Failed to generate signed URL from file_key', 'SIGNED_URL_FAILED')
+                    current_app.logger.info(f"Generated fresh signed URL for reprocessing: {signed_url[:100]}")
+                except Exception as e:
+                    current_app.logger.exception(f'Exception generating signed URL from file_key: {file_key}')
+                    return APIResponse.error(f'Failed to access file: {str(e)}', 'FILE_ACCESS_FAILED')
             
             if not signed_url:
-                return APIResponse.error('No file or signed_url/image_url provided', 'MISSING_INPUT')
+                return APIResponse.error('No file, signed_url, image_url, or file_key provided', 'MISSING_INPUT')
             
             current_app.logger.info(
                 f"Processing image from URL: request_id={request_id} url={signed_url[:100]}"
@@ -119,7 +132,14 @@ def detect_image():
             if fetch_url.startswith('/'):
                 base = os.getenv('SUPABASE_URL') or current_app.config.get('SUPABASE_URL')
                 if base:
-                    fetch_url = base.rstrip('/') + fetch_url
+                    # Don't add /storage/v1 if the path already includes it
+                    if fetch_url.startswith('/storage/v1'):
+                        fetch_url = base.rstrip('/') + fetch_url
+                    else:
+                        fetch_url = base.rstrip('/') + '/storage/v1' + fetch_url
+                    current_app.logger.info(f"Converted relative URL to absolute: {fetch_url[:100]}")
+
+            current_app.logger.info(f"Final fetch URL: {fetch_url[:150]}")
 
             # SSRF protection: only allow URLs from trusted domains
             if not is_allowed_url(fetch_url):
@@ -139,12 +159,13 @@ def detect_image():
                         )
                 
                 resp = requests.get(fetch_url, timeout=30)
+                current_app.logger.info(f"URL fetch status: {resp.status_code}, content-length: {len(resp.content)}")
             except Exception as e:
-                current_app.logger.exception(f'Failed to fetch signed URL: request_id={request_id}')
+                current_app.logger.exception(f'Failed to fetch signed URL: request_id={request_id} url={fetch_url[:100]}')
                 return APIResponse.error(f'Could not fetch image from URL: {str(e)}', 'DOWNLOAD_FAILED')
 
             if resp.status_code != 200:
-                current_app.logger.warning(f'Signed URL fetch returned status {resp.status_code}: request_id={request_id}')
+                current_app.logger.warning(f'Signed URL fetch returned status {resp.status_code}: request_id={request_id} url={fetch_url[:100]} response={resp.text[:200]}')
                 return APIResponse.error(f'Could not fetch image from URL (status {resp.status_code})', 'DOWNLOAD_FAILED')
 
             file_contents = resp.content
