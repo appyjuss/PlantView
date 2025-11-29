@@ -21,7 +21,6 @@ def validate_content_type(content_type: str) -> tuple[bool, str | None]:
 
 def validate_file_size(file, max_size: int = MAX_CONTENT_LENGTH) -> tuple[bool, int | str]:
     """Validate file size doesn't exceed limit. Returns (is_valid, size_or_error_message)."""
-    import os
     file.seek(0, os.SEEK_END)
     size = file.tell()
     file.seek(0)  # Reset to start

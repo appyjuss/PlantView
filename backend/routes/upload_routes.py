@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, request, jsonify, current_app, make_response
+from flask import Blueprint, request, jsonify, current_app, make_response, Response
 from werkzeug.utils import secure_filename
 
 from ..core.auth import require_auth
@@ -23,7 +23,9 @@ def upload_file():
     result = detect_image()
     
     # Add deprecation headers
-    if isinstance(result, tuple):
+    if isinstance(result, Response):
+        resp = result
+    elif isinstance(result, tuple):
         response_data, status_code = result
         resp = make_response(response_data, status_code)
     else:

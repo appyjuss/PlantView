@@ -67,8 +67,16 @@ export async function reprocessDetection(id: string): Promise<Detection | undefi
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || `Reprocess failed: ${response.status}`);
+      let errorMessage = `Reprocess failed: ${response.status} ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        if (errorData && errorData.error?.message) {
+          errorMessage = errorData.error.message;
+        }
+      } catch (jsonErr) {
+        // response body is not JSON, keep default errorMessage
+      }
+      throw new Error(errorMessage);
     }
 
     const result = await response.json();
@@ -80,6 +88,11 @@ export async function reprocessDetection(id: string): Promise<Detection | undefi
     // Extract data from standardized response
     const { data, meta } = result;
 
+    // Validate detection data exists
+    if (!data?.detection?.class_name || data?.detection?.confidence === undefined) {
+      throw new Error('Invalid response: missing detection data');
+    }
+
     // update detection with new server prediction
     items[idx].result = [
       {
@@ -88,7 +101,7 @@ export async function reprocessDetection(id: string): Promise<Detection | undefi
       },
     ];
     items[idx].status = "done";
-    items[idx].modelVersion = meta.model_version;
+    items[idx].modelVersion = meta?.model_version;
     writeStore(items);
 
     return items[idx];

@@ -5,13 +5,36 @@ import requests
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.utils import secure_filename
 
+from urllib.parse import urlparse
+
 from ..core.auth import require_auth
 from ..core.storage import supabase_upload_file, supabase_get_signed_url, create_upload_record
-from ..core.utils import allowed_file, validate_content_type, validate_file_size, MODEL_VERSION
+from ..core.utils import allowed_file, validate_content_type, validate_file_size, MODEL_VERSION, MAX_CONTENT_LENGTH
 from ..core.schemas import APIResponse, ResponseMeta, DetectionData, DetectionResult
 from .. import prediction as predictor
 
 detect_bp = Blueprint('detect', __name__)
+
+
+def is_allowed_url(url: str) -> bool:
+    """
+    Validate that a URL is safe to fetch (SSRF protection).
+    Only allow URLs from the configured Supabase domain.
+    """
+    try:
+        parsed = urlparse(url)
+        supabase_url = os.getenv('SUPABASE_URL') or ''
+        if supabase_url:
+            supabase_parsed = urlparse(supabase_url)
+            # Allow only URLs from the same host as Supabase
+            if parsed.netloc and parsed.netloc == supabase_parsed.netloc:
+                return True
+        # Allow relative URLs (they get prefixed with Supabase URL)
+        if url.startswith('/'):
+            return True
+        return False
+    except Exception:
+        return False
 
 
 @detect_bp.route('/api/detect', methods=['POST'])
@@ -98,7 +121,23 @@ def detect_image():
                 if base:
                     fetch_url = base.rstrip('/') + fetch_url
 
+            # SSRF protection: only allow URLs from trusted domains
+            if not is_allowed_url(fetch_url):
+                current_app.logger.warning(f'Blocked URL fetch due to SSRF protection: request_id={request_id} url={fetch_url[:100]}')
+                return APIResponse.error('URL domain not allowed. Only Supabase storage URLs are permitted.', 'URL_NOT_ALLOWED')
+
             try:
+                # First, make a HEAD request to check content-length before downloading
+                head_resp = requests.head(fetch_url, timeout=10, allow_redirects=True)
+                content_length = head_resp.headers.get('Content-Length')
+                if content_length:
+                    content_length = int(content_length)
+                    if content_length > MAX_CONTENT_LENGTH:
+                        return APIResponse.error(
+                            f'File size ({content_length} bytes) exceeds maximum allowed size ({MAX_CONTENT_LENGTH} bytes)',
+                            'FILE_TOO_LARGE'
+                        )
+                
                 resp = requests.get(fetch_url, timeout=30)
             except Exception as e:
                 current_app.logger.exception(f'Failed to fetch signed URL: request_id={request_id}')
@@ -110,8 +149,26 @@ def detect_image():
 
             file_contents = resp.content
             content_type = resp.headers.get('Content-Type', 'image/jpeg')
+            
+            # Validate content type from response headers
+            is_valid, error_msg = validate_content_type(content_type)
+            if not is_valid:
+                return APIResponse.error(error_msg, 'INVALID_CONTENT_TYPE')
+            
             filename = fetch_url.split('/')[-1].split('?')[0] or f'reprocess_{uuid.uuid4().hex[:8]}.jpg'
             file_size = len(file_contents)
+            
+            # Double-check file size after download
+            if file_size > MAX_CONTENT_LENGTH:
+                return APIResponse.error(
+                    f'File size ({file_size} bytes) exceeds maximum allowed size ({MAX_CONTENT_LENGTH} bytes)',
+                    'FILE_TOO_LARGE'
+                )
+            
+            current_app.logger.info(
+                f"File download validated: request_id={request_id} filename={filename} "
+                f"content_type={content_type} size={file_size}"
+            )
             
         else:
             return APIResponse.error(
@@ -127,7 +184,7 @@ def detect_image():
             current_app.logger.info(f"File uploaded to storage: request_id={request_id} file_key={file_key}")
         except Exception:
             current_app.logger.exception(f'Supabase upload failed: request_id={request_id}')
-            # Continue with prediction even if upload fails
+            return APIResponse.error('File upload failed', 'UPLOAD_FAILED', 500)
 
         # Get signed URL
         if file_key:
@@ -140,6 +197,9 @@ def detect_image():
         detection = None
         try:
             detection = predictor.predict_disease_from_bytes(file_contents)
+            if detection is None:
+                current_app.logger.error(f'Model returned None prediction: request_id={request_id}')
+                return APIResponse.error('Model prediction returned no result', 'PREDICTION_FAILED', 500)
             current_app.logger.info(
                 f"Prediction completed: request_id={request_id} class_id={detection.get('class_id')} "
                 f"class_name={detection.get('class_name')} confidence={detection.get('confidence')} "
@@ -151,7 +211,7 @@ def detect_image():
 
         # Create upload record
         try:
-            record = create_upload_record(user_id=user_id, filename=filename, file_path=file_key or '', detection_result=detection)
+            create_upload_record(user_id=user_id, filename=filename, file_path=file_key or '', detection_result=detection)
         except Exception:
             current_app.logger.exception(f'Failed to create upload record: request_id={request_id}')
 
