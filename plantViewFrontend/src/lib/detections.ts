@@ -15,7 +15,7 @@ export type Detection = {
   modelVersion?: string;
 };
 
-const STORAGE_KEY = "mock_detections_v1";
+const STORAGE_KEY = "detections_v1";
 
 function readStore(): Detection[] {
   try {
@@ -87,7 +87,7 @@ export async function reprocessDetection(id: string): Promise<Detection | undefi
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch("/API/upload", {
+    const response = await fetch("/api/upload", {
       method: "POST",
       body: formData,
     });
@@ -101,12 +101,12 @@ export async function reprocessDetection(id: string): Promise<Detection | undefi
     // update detection with new server prediction
     items[idx].result = [
       {
-        label: data.prediction.class_name,
-        confidence: data.prediction.confidence ?? 0,
+        label: data.prediction?.class_name ?? data.detection?.class_name ?? 'Unknown',
+        confidence: data.prediction?.confidence ?? data.detection?.confidence ?? 0,
       },
     ];
     items[idx].status = "done";
-    items[idx].modelVersion = data.prediction.modelVersion ?? "server";
+    items[idx].modelVersion = data.prediction?.modelVersion ?? data.detection?.modelVersion ?? "server";
     writeStore(items);
 
     return items[idx];

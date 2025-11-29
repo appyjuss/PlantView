@@ -1,60 +1,63 @@
 import os
-from flask import Flask, flash, request, redirect, url_for, send_from_directory, jsonify
-from werkzeug.utils import secure_filename
-from flask_cors import CORS
-from prediction import predict_disease
+from pathlib import Path
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', "jpeg"}
-# use absolute uploads path (relative to this file) and ensure it exists
-UPLOAD_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'uploads'))
-app = Flask(__name__, static_folder = "../plantviewFrontend/dist", static_url_path='/')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-cors = CORS(app, origins='*')
+# Load environment variables from .env if present
+from dotenv import load_dotenv
 
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+# Load .env from project root (parent of backend/)
+project_root = Path(__file__).parent.parent
+# Load .env from repository root (if present)
+load_dotenv(project_root / '.env')
+# Also load .env from the backend folder (common local dev location)
+load_dotenv(Path(__file__).parent / '.env')
 
-@app.route('/')
-def home():
-    return send_from_directory(app.static_folder, "index.html")
-
-@app.route('/API/upload', methods=['GET', 'POST'])
-def upload_file():
-    if request.method == 'POST':
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        # If the user does not select a file, the browser submits an
-        # empty file without a filename.
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(save_path)
-            
-            try:
-                result = predict_disease(save_path)
-                # debug log to confirm it's a dict/json-serializable
-                print("Prediction result (type):", type(result), result)
-            except Exception as e:
-                print("Error during prediction:", e)
-                return jsonify({"error": "Prediction failed", "details": str(e)}), 500
-
-            # ensure we return JSON response
-            return jsonify({
-                "file": filename,
-                "file_url": url_for('download_file', name=filename, _external=True),
-                "prediction": result
-            }), 200
-    return ''
+# Use relative imports; run the app as a package to ensure imports resolve:
+#   from the repository root: `python -m backend.main`
+# Relative imports are preferred for intra-package imports and for clearer module
+# structure. Avoid running `python main.py` from inside the package directory.
+from .app import create_app, register_static_index
+from .routes import auth_bp, upload_bp
+from .core.cli import register_cli_commands
 
 
-@app.route('/uploads/<name>')
-def download_file(name):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], name)
+# Create the Flask app and register routes
+app = create_app()
+
+# Configure Supabase (optional) from env or loaded .env files
+app.config['SUPABASE_URL'] = os.getenv('SUPABASE_URL') or app.config.get('SUPABASE_URL')
+# Support either name: SUPABASE_SERVICE_KEY or SUPABASE_SERVICE_ROLE_KEY
+app.config['SUPABASE_SERVICE_KEY'] = os.getenv('SUPABASE_SERVICE_KEY') or os.getenv('SUPABASE_SERVICE_ROLE_KEY') or app.config.get('SUPABASE_SERVICE_KEY') or app.config.get('SUPABASE_SERVICE_ROLE_KEY')
+app.config['SUPABASE_SERVICE_ROLE_KEY'] = os.getenv('SUPABASE_SERVICE_ROLE_KEY') or os.getenv('SUPABASE_SERVICE_KEY') or app.config.get('SUPABASE_SERVICE_ROLE_KEY') or app.config.get('SUPABASE_SERVICE_KEY')
+app.config['SUPABASE_BUCKET'] = os.getenv('SUPABASE_BUCKET', app.config.get('SUPABASE_BUCKET', 'uploads'))
+
+# Environment and security
+app.config['ENV'] = os.getenv('ENV', 'development')
+app.config['TESTING'] = app.config['ENV'] == 'testing'
+
+# CORS configuration
+ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'http://localhost:5173,http://localhost:3000').split(',')
+app.cors_origins = [origin.strip() for origin in ALLOWED_ORIGINS]
+app.config['CORS_ORIGINS'] = app.cors_origins
+
+# Register blueprints
+app.register_blueprint(auth_bp)
+app.register_blueprint(upload_bp)
+register_static_index(app)
+
+# Register CLI commands
+register_cli_commands(app)
+
+
+if __name__ == '__main__':
+    # Ensure upload directory exists (local fallback)
+    upload_folder = app.config.get('UPLOAD_FOLDER', 'uploads')
+    try:
+        os.makedirs(upload_folder, exist_ok=True)
+    except Exception:
+        # Ignore directory creation errors - upload folder is optional
+        # when using Supabase storage or if folder already exists
+        pass
+
+    # Use debug only in development
+    debug_mode = app.config['ENV'] == 'development'
+    app.run(host='127.0.0.1', port=5000, debug=debug_mode)

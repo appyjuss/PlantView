@@ -14,7 +14,7 @@ export default function Dashboard() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-sm text-slate-600 mt-1">Welcome back{user ? `, ${user.name}` : ""}.</p>
+          <p className="text-sm text-slate-600 mt-1">Welcome back{user ? `, ${user.email}` : ""}.</p>
         </div>
         <div>
           <button onClick={logout} className="text-sm text-red-600">Sign out</button>
