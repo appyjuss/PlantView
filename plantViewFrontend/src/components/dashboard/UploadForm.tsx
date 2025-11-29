@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { getToken } from "../../lib/api";
+import { saveDetection } from "../../lib/detections";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -38,23 +39,42 @@ export default function UploadForm({ onComplete }: { onComplete?: (d: any) => vo
       }
 
       const data = await response.json();
-      
+
+      // data contains `file_key` and `detection` (backend).
+      // Retrieve a signed URL for the uploaded file from the backend.
+      let fileUrl: string | null = null;
+      try {
+        const fileKey = data.file_key;
+        if (fileKey) {
+          const signedResp = await fetch(`${API_URL}/api/uploads/${fileKey}`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (signedResp.ok) {
+            const signedJson = await signedResp.json();
+            fileUrl = signedJson.url || null;
+          }
+        }
+      } catch (err) {
+        // non-fatal; continue without file URL
+        console.warn('Failed to fetch signed file URL', err);
+      }
+
+      const prediction = data.detection;
+      const label = prediction?.class_name ?? 'Unknown';
+      const confidence = prediction?.confidence ?? 0;
+
       // Create detection object with prediction results (use persistent server URL)
       const detection = {
         id: String(Date.now()) + Math.random().toString(36).slice(2, 9),
         createdAt: new Date().toISOString(),
         status: 'done' as const,
-        imageDataUrl: data.file_url, // <- persistent URL served by backend
-        thumbnailDataUrl: data.file_url, // you can generate a proper thumbnail if needed
-        file_url: data.file_url,
-        result: [
-          {
-            label: data.prediction.class_name,
-            confidence: data.prediction.confidence,
-          }
-        ],
-        modelVersion: data.prediction.model_version ?? "server",
-        fileName: data.file,
+        imageDataUrl: fileUrl || URL.createObjectURL(file),
+        thumbnailDataUrl: fileUrl || URL.createObjectURL(file),
+        file_url: fileUrl,
+        result: [ { label, confidence } ],
+        modelVersion: prediction?.model_version ?? 'server',
+        fileName: file.name,
       };
       //Save detection to history storage
       saveDetection(detection);

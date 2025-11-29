@@ -42,7 +42,14 @@ def supabase_upload_file(file_data, filename, content_type, user_id):
         logger.warning("Supabase upload attempted but SUPABASE_URL or SERVICE_ROLE_KEY not set")
         return None
 
-    upload_url = f"{resolved_url}/storage/v1/object/{SUPABASE_BUCKET}/{user_id}/{filename}"
+    # Resolve bucket at call time too (allow override via app config)
+    try:
+        from flask import current_app
+        resolved_bucket = os.getenv('SUPABASE_BUCKET') or current_app.config.get('SUPABASE_BUCKET', SUPABASE_BUCKET)
+    except Exception:
+        resolved_bucket = os.getenv('SUPABASE_BUCKET') or SUPABASE_BUCKET
+
+    upload_url = f"{resolved_url}/storage/v1/object/{resolved_bucket}/{user_id}/{filename}"
     # Log masked info about the resolved key to catch truncation/mismatch issues
     try:
         k = resolved_key
@@ -59,7 +66,8 @@ def supabase_upload_file(file_data, filename, content_type, user_id):
     if upsert_enabled:
         headers['x-upsert'] = 'true'
     try:
-        resp = requests.post(upload_url, headers=headers, data=file_stream, timeout=30)
+        # `file_data` is expected to be bytes or a file-like object (we pass bytes from the route)
+        resp = requests.post(upload_url, headers=headers, data=file_data, timeout=30)
     except Exception as e:
         logger.exception("Exception when POSTing to Supabase upload URL=%s for user=%s filename=%s", upload_url, user_id, filename)
         return None
@@ -93,14 +101,23 @@ def supabase_get_signed_url(file_key, expires_in=3600):
         logger.warning("Supabase signed URL requested but SUPABASE_URL or SERVICE_ROLE_KEY not set")
         return None
 
-    url = f"{resolved_url}/storage/v1/object/sign/{SUPABASE_BUCKET}/{file_key}?expiresIn={expires_in}"
-    headers = {"Authorization": f"Bearer {resolved_key}"}
+    # Resolve bucket at call time (mirror behavior in upload)
     try:
-        resp = requests.post(url, headers=headers, timeout=30)
+        from flask import current_app
+        resolved_bucket = os.getenv('SUPABASE_BUCKET') or current_app.config.get('SUPABASE_BUCKET', SUPABASE_BUCKET)
+    except Exception:
+        resolved_bucket = os.getenv('SUPABASE_BUCKET') or SUPABASE_BUCKET
+
+    # Some Supabase sign endpoints expect expiresIn in the JSON body.
+    url = f"{resolved_url}/storage/v1/object/sign/{resolved_bucket}/{file_key}"
+    headers = {"Authorization": f"Bearer {resolved_key}", "Content-Type": "application/json"}
+    try:
+        resp = requests.post(url, headers=headers, json={"expiresIn": expires_in}, timeout=30)
     except Exception:
         logger.exception("Exception when requesting signed URL for key=%s", file_key)
         return None
 
+    # Log detailed response on failure to help debugging
     if resp.status_code == 200:
         try:
             data = resp.json()
@@ -109,7 +126,7 @@ def supabase_get_signed_url(file_key, expires_in=3600):
             logger.exception("Failed to parse JSON signed URL response for key=%s: %s", file_key, resp.text)
             return None
 
-    logger.error("Supabase signed URL request failed for key=%s status=%s body=%s", file_key, resp.status_code, (resp.text or resp.content))
+    logger.warning("Supabase signed URL request failed for key=%s status=%s body=%s", file_key, resp.status_code, (resp.text or resp.content))
     return None
 
 
