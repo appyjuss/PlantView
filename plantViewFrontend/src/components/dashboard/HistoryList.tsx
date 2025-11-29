@@ -44,9 +44,13 @@ export default function HistoryList({ onOpen }: { onOpen?: (id: string) => void 
         const serverItems: Detection[] = json.map((r: any) => {
           let result = undefined;
           if (r.detection && typeof r.detection === 'object') {
+            // Handle both old and new response formats
+            const detection = r.detection;
+            const className = detection.class_name || 'Unknown';
+            const confidence = detection.confidence || 0;
             result = [{ 
-              label: r.detection.class_name || 'Unknown',
-              confidence: r.detection.confidence || 0
+              label: className,
+              confidence: confidence
             }];
           }
           return {
@@ -56,7 +60,7 @@ export default function HistoryList({ onOpen }: { onOpen?: (id: string) => void 
             imageDataUrl: r.file_url || null,
             thumbnailDataUrl: r.file_url || null,
             result: result,
-            modelVersion: 'server',
+            modelVersion: r.model_version || 'server',
           };
         });
 

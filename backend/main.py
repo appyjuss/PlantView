@@ -16,7 +16,7 @@ load_dotenv(Path(__file__).parent / '.env')
 # Relative imports are preferred for intra-package imports and for clearer module
 # structure. Avoid running `python main.py` from inside the package directory.
 from .app import create_app, register_static_index
-from .routes import auth_bp, upload_bp
+from .routes import auth_bp, upload_bp, detect_bp
 from .core.cli import register_cli_commands
 
 
@@ -42,6 +42,7 @@ app.config['CORS_ORIGINS'] = app.cors_origins
 # Register blueprints
 app.register_blueprint(auth_bp)
 app.register_blueprint(upload_bp)
+app.register_blueprint(detect_bp)
 register_static_index(app)
 
 # Register CLI commands
