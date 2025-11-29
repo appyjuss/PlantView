@@ -23,6 +23,9 @@ def create_app(static_folder: str = "../plantviewFrontend/dist", static_url_path
     app.config['JWT_ALGORITHM'] = os.getenv('JWT_ALGORITHM', 'HS256')
     app.config['JWT_EXPIRATION_HOURS'] = int(os.getenv('JWT_EXPIRATION_HOURS', '1'))
     app.config['JWT_REFRESH_EXPIRATION_HOURS'] = int(os.getenv('JWT_REFRESH_EXPIRATION_HOURS', '168'))
+    
+    # File upload limits
+    app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_UPLOAD_SIZE', str(10 * 1024 * 1024)))  # 10MB default
 
     # Get allowed origins from environment or default values.
     allowed_origins_env = os.getenv('ALLOWED_ORIGINS')

@@ -26,7 +26,7 @@ export default function UploadForm({ onComplete }: { onComplete?: (d: any) => vo
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(`${API_URL}/api/upload`, {
+      const response = await fetch(`${API_URL}/api/detect`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -35,48 +35,36 @@ export default function UploadForm({ onComplete }: { onComplete?: (d: any) => vo
       });
 
       if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || `Upload failed: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const result = await response.json();
 
-      // data contains `file_key` and `detection` (backend).
-      // Retrieve a signed URL for the uploaded file from the backend.
-      let fileUrl: string | null = null;
-      try {
-        const fileKey = data.file_key;
-        if (fileKey) {
-          const signedResp = await fetch(`${API_URL}/api/uploads/${fileKey}`, {
-            method: 'GET',
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (signedResp.ok) {
-            const signedJson = await signedResp.json();
-            fileUrl = signedJson.url || null;
-          }
-        }
-      } catch (err) {
-        // non-fatal; continue without file URL
-          // Failed to fetch signed file URL - silently ignore in UI
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Detection failed');
       }
 
+      // Extract data from standardized response
+      const { data, meta } = result;
       const prediction = data.detection;
-      const label = prediction?.class_name ?? 'Unknown';
-      const confidence = prediction?.confidence ?? 0;
+      const label = prediction.class_name;
+      const confidence = prediction.confidence;
 
-      // Create detection object with prediction results (use persistent server URL)
+      // Create detection object with prediction results
       const detection = {
         id: String(Date.now()) + Math.random().toString(36).slice(2, 9),
         createdAt: new Date().toISOString(),
         status: 'done' as const,
-        imageDataUrl: fileUrl || URL.createObjectURL(file),
-        thumbnailDataUrl: fileUrl || URL.createObjectURL(file),
-        file_url: fileUrl,
+        imageDataUrl: data.file_url || URL.createObjectURL(file),
+        thumbnailDataUrl: data.file_url || URL.createObjectURL(file),
+        file_url: data.file_url,
         result: [ { label, confidence } ],
-        modelVersion: prediction?.model_version ?? 'server',
+        modelVersion: meta.model_version,
         fileName: file.name,
       };
-      //Save detection to history storage
+      
+      // Save detection to history storage
       saveDetection(detection);
 
       onComplete?.(detection);

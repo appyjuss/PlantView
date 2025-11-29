@@ -31,37 +31,6 @@ function writeStore(items: Detection[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
 }
 
-function randChoice<T>(arr: T[]) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-export async function createDetectionFromFile(file: File, userId?: string): Promise<Detection> {
-  const dataUrl = await readFileAsDataURL(file);
-  // simple thumbnail: small canvas
-  const thumb = await makeThumbnail(dataUrl, 240);
-
-  // mock inference
-  const labels = ["Late blight", "Powdery mildew", "Bacterial spot", "Healthy"];
-  const label = randChoice(labels);
-  const confidence = +(0.6 + Math.random() * 0.4).toFixed(2);
-
-  const detection: Detection = {
-    id: String(Date.now()) + Math.random().toString(36).slice(2, 9),
-    userId,
-    createdAt: new Date().toISOString(),
-    status: "done",
-    imageDataUrl: dataUrl,
-    thumbnailDataUrl: thumb,
-    result: [{ label, confidence }],
-    modelVersion: "mock-v1",
-  };
-
-  const items = readStore();
-  items.unshift(detection);
-  writeStore(items);
-  return detection;
-}
-
 export function listDetections(): Detection[] {
   return readStore();
 }
@@ -80,33 +49,46 @@ export async function reprocessDetection(id: string): Promise<Detection | undefi
   writeStore(items);
 
   try {
-    // convert data URL back to File for upload
-    const blob = await fetch(items[idx].imageDataUrl).then((r) => r.blob());
-    const file = new File([blob], `reprocess_${id}.jpg`, { type: "image/jpeg" });
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
 
-    const formData = new FormData();
-    formData.append("file", file);
+    // Send image_url to /api/detect for reprocessing
+    const imageUrl = items[idx].imageDataUrl;
 
-    const response = await fetch("/api/upload", {
+    const response = await fetch("/api/detect", {
       method: "POST",
-      body: formData,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ image_url: imageUrl }),
     });
 
     if (!response.ok) {
-      throw new Error(`Reprocess failed: ${response.status}`);
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || `Reprocess failed: ${response.status}`);
     }
 
-    const data = await response.json();
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error?.message || 'Detection failed');
+    }
+
+    // Extract data from standardized response
+    const { data, meta } = result;
 
     // update detection with new server prediction
     items[idx].result = [
       {
-        label: data.prediction?.class_name ?? data.detection?.class_name ?? 'Unknown',
-        confidence: data.prediction?.confidence ?? data.detection?.confidence ?? 0,
+        label: data.detection.class_name,
+        confidence: data.detection.confidence,
       },
     ];
     items[idx].status = "done";
-    items[idx].modelVersion = data.prediction?.modelVersion ?? data.detection?.modelVersion ?? "server";
+    items[idx].modelVersion = meta.model_version;
     writeStore(items);
 
     return items[idx];
@@ -122,29 +104,4 @@ export function saveDetection(d: Detection) {
   const items = readStore();
   items.unshift(d);
   writeStore(items);
-}
-
-function readFileAsDataURL(file: File): Promise<string> {
-  return new Promise((res, rej) => {
-    const fr = new FileReader();
-    fr.onload = () => res(String(fr.result));
-    fr.onerror = rej;
-    fr.readAsDataURL(file);
-  });
-}
-
-function makeThumbnail(dataUrl: string, size = 240): Promise<string> {
-  return new Promise((res) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const scale = Math.min(size / img.width, size / img.height, 1);
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      res(canvas.toDataURL("image/jpeg", 0.8));
-    };
-    img.src = dataUrl;
-  });
 }
