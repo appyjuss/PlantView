@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Check if user is logged in on mount
+  // On mount, check if user is still authenticated with the backend
   useEffect(() => {
     const initAuth = async () => {
       try {
