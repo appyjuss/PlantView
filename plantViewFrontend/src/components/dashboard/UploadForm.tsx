@@ -35,8 +35,16 @@ export default function UploadForm({ onComplete }: { onComplete?: (d: any) => vo
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || `Upload failed: ${response.statusText}`);
+        let errorMessage = `Upload failed: ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          if (errorData && errorData.error?.message) {
+            errorMessage = errorData.error.message;
+          }
+        } catch (jsonErr) {
+          // If response is not JSON, keep the default errorMessage
+        }
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -47,7 +55,10 @@ export default function UploadForm({ onComplete }: { onComplete?: (d: any) => vo
 
       // Extract data from standardized response
       const { data, meta } = result;
-      const prediction = data.detection;
+      const prediction = data?.detection;
+      if (!prediction || !prediction.class_name || prediction.confidence === undefined) {
+        throw new Error('Invalid response: missing detection data');
+      }
       const label = prediction.class_name;
       const confidence = prediction.confidence;
 
