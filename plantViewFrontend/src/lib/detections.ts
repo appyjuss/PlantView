@@ -16,6 +16,9 @@ export type Detection = {
 };
 
 const STORAGE_KEY = "detections_v1";
+const SERVER_CACHE_KEY = "server_detections_cache";
+const CACHE_TIMESTAMP_KEY = "server_detections_timestamp";
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 function readStore(): Detection[] {
   try {
@@ -29,6 +32,47 @@ function readStore(): Detection[] {
 
 function writeStore(items: Detection[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
+// Server cache management
+export function getServerCache(): { items: Detection[], timestamp: number } | null {
+  try {
+    const items = localStorage.getItem(SERVER_CACHE_KEY);
+    const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+    
+    if (!items || !timestamp) return null;
+    
+    const ts = parseInt(timestamp, 10);
+    const age = Date.now() - ts;
+    
+    // Return null if cache is expired
+    if (age > CACHE_TTL) {
+      localStorage.removeItem(SERVER_CACHE_KEY);
+      localStorage.removeItem(CACHE_TIMESTAMP_KEY);
+      return null;
+    }
+    
+    return {
+      items: JSON.parse(items) as Detection[],
+      timestamp: ts
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+export function setServerCache(items: Detection[]) {
+  try {
+    localStorage.setItem(SERVER_CACHE_KEY, JSON.stringify(items));
+    localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+  } catch (e) {
+    console.error('Failed to cache server detections:', e);
+  }
+}
+
+export function clearServerCache() {
+  localStorage.removeItem(SERVER_CACHE_KEY);
+  localStorage.removeItem(CACHE_TIMESTAMP_KEY);
 }
 
 export function listDetections(): Detection[] {

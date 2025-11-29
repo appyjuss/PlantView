@@ -72,6 +72,8 @@ def list_uploads():
         for r in records:
             try:
                 file_url = supabase_get_signed_url(r.file_path)
+                if not file_url:
+                    current_app.logger.warning(f"Failed to generate signed URL for upload id={r.id} key={r.file_path}")
             except Exception:
                 current_app.logger.exception("Failed to get signed URL for upload id=%s key=%s", r.id, r.file_path)
                 file_url = None

@@ -1,23 +1,24 @@
-import { useEffect, useState } from "react";
-import { getDetection, reprocessDetection, type Detection } from "../../lib/detections";
+import { useState } from "react";
+import { reprocessDetection, type Detection } from "../../lib/detections";
 
-export default function DetectionDetails({ id, onClose }: { id: string; onClose: () => void }) {
-  const [detection, setDetection] = useState<Detection | undefined>(undefined);
+export default function DetectionDetails({ detection: initialDetection, onClose }: { detection: Detection; onClose: () => void }) {
+  const [detection, setDetection] = useState<Detection>(initialDetection);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setDetection(getDetection(id));
-  }, [id]);
+  const [imageError, setImageError] = useState(false);
 
   async function reprocess() {
     setLoading(true);
-    const updated = await reprocessDetection(id);
-    const refreshed = getDetection(id);
-    setDetection(refreshed || updated);
-    setLoading(false);
+    try {
+      const updated = await reprocessDetection(detection.id);
+      if (updated) {
+        setDetection(updated);
+      }
+    } catch (err) {
+      console.error('Reprocess failed:', err);
+    } finally {
+      setLoading(false);
+    }
   }
-
-  if (!detection) return <div className="p-4">Not found</div>;
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-6">
@@ -35,10 +36,22 @@ export default function DetectionDetails({ id, onClose }: { id: string; onClose:
 
         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            {detection.imageDataUrl ? (
-              <img src={detection.imageDataUrl} alt="full" className="w-full rounded" />
+            {detection.imageDataUrl && !imageError ? (
+              <div className="relative">
+                <img 
+                  src={detection.imageDataUrl} 
+                  alt="full" 
+                  className="w-full rounded" 
+                  onError={() => {
+                    console.error('Full image failed to load:', detection.imageDataUrl);
+                    setImageError(true);
+                  }}
+                />
+              </div>
             ) : (
-              <div className="w-full h-48 bg-slate-100 rounded flex items-center justify-center text-sm text-slate-400">No image available</div>
+              <div className="w-full h-48 bg-slate-100 rounded flex items-center justify-center text-sm text-slate-400">
+                {imageError ? 'Image failed to load' : 'No image available'}
+              </div>
             )}
           </div>
           <div>
