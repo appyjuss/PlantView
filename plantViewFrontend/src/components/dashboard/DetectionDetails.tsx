@@ -5,16 +5,19 @@ export default function DetectionDetails({ detection: initialDetection, onClose 
   const [detection, setDetection] = useState<Detection>(initialDetection);
   const [loading, setLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function reprocess() {
     setLoading(true);
+    setError(null);
     try {
-      const updated = await reprocessDetection(detection.id);
+      const updated = await reprocessDetection(detection);
       if (updated) {
         setDetection(updated);
       }
     } catch (err) {
-      console.error('Reprocess failed:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Reprocess failed';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -43,7 +46,6 @@ export default function DetectionDetails({ detection: initialDetection, onClose 
                   alt="full" 
                   className="w-full rounded" 
                   onError={() => {
-                    console.error('Full image failed to load:', detection.imageDataUrl);
                     setImageError(true);
                   }}
                 />
@@ -60,8 +62,18 @@ export default function DetectionDetails({ detection: initialDetection, onClose 
               {JSON.stringify(detection.result, null, 2)}
             </pre>
 
+            {error && (
+              <div className="mt-3 p-2 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+                {error}
+              </div>
+            )}
+
             <div className="mt-4 flex gap-3">
-              <button onClick={reprocess} disabled={loading} className="px-3 py-2 bg-emerald-600 text-white rounded">
+              <button 
+                onClick={reprocess} 
+                disabled={loading || !detection.imageDataUrl} 
+                className="px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
                 {loading ? "Reprocessing…" : "Reprocess"}
               </button>
             </div>

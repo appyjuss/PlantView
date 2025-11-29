@@ -16,7 +16,6 @@ export default function DetectionCard({ detection, onView }: { detection: Detect
           alt="thumb" 
           className="w-20 h-20 object-cover rounded" 
           onError={() => {
-            console.error('Image failed to load:', detection.thumbnailDataUrl);
             setImageError(true);
           }}
           loading="lazy"

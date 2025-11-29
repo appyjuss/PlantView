@@ -169,11 +169,6 @@ export default function HistoryList({ onOpen, onUploadComplete }: { onOpen?: (de
           }];
         }
         
-        // Debug: Log image URL issues
-        if (!r.file_url) {
-          console.warn('Missing file_url for detection:', r.id, r.file_key);
-        }
-        
         return {
           id: String(r.id),
           createdAt: r.created_at || new Date().toISOString(),
@@ -182,6 +177,7 @@ export default function HistoryList({ onOpen, onUploadComplete }: { onOpen?: (de
           thumbnailDataUrl: r.file_url || null,
           result: result,
           modelVersion: r.model_version || 'server',
+          fileKey: r.file_key, // Store file_key for reprocessing
         };
       });
 
