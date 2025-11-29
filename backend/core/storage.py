@@ -108,10 +108,11 @@ def supabase_get_signed_url(file_key, expires_in=3600):
     except Exception:
         resolved_bucket = os.getenv('SUPABASE_BUCKET') or SUPABASE_BUCKET
 
-    url = f"{resolved_url}/storage/v1/object/sign/{resolved_bucket}/{file_key}?expiresIn={expires_in}"
-    headers = {"Authorization": f"Bearer {resolved_key}"}
+    # Some Supabase sign endpoints expect expiresIn in the JSON body.
+    url = f"{resolved_url}/storage/v1/object/sign/{resolved_bucket}/{file_key}"
+    headers = {"Authorization": f"Bearer {resolved_key}", "Content-Type": "application/json"}
     try:
-        resp = requests.post(url, headers=headers, timeout=30)
+        resp = requests.post(url, headers=headers, json={"expiresIn": expires_in}, timeout=30)
     except Exception:
         logger.exception("Exception when requesting signed URL for key=%s", file_key)
         return None

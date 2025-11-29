@@ -4,7 +4,7 @@ from werkzeug.utils import secure_filename
 
 from ..core.auth import require_auth
 from ..core.utils import allowed_file
-from ..core.storage import supabase_upload_file, supabase_get_signed_url, create_upload_record
+from ..core.storage import supabase_upload_file, supabase_get_signed_url, create_upload_record, get_user_uploads
 from .. import prediction as predictor
 
 upload_bp = Blueprint('upload', __name__)
@@ -149,3 +149,32 @@ def get_file(file_key):
     except Exception:
         current_app.logger.exception("Exception while getting file for key=%s", file_key)
         return jsonify({'error': 'File not found'}), 500
+
+
+
+@upload_bp.route('/api/uploads', methods=['GET'])
+@require_auth
+def list_uploads():
+    """Return a list of uploads for the authenticated user with signed URLs and detection results."""
+    try:
+        user_id = getattr(request, 'user_id', None)
+        records = get_user_uploads(user_id)
+        out = []
+        for r in records:
+            try:
+                file_url = supabase_get_signed_url(r.file_path)
+            except Exception:
+                current_app.logger.exception("Failed to get signed URL for upload id=%s key=%s", r.id, r.file_path)
+                file_url = None
+            out.append({
+                'id': r.id,
+                'file_key': r.file_path,
+                'file_url': file_url,
+                'detection': r.detection_result,
+                'created_at': r.uploaded_at.isoformat() if getattr(r, 'uploaded_at', None) else None,
+                'filename': r.filename,
+            })
+        return jsonify(out)
+    except Exception:
+        current_app.logger.exception('Exception while listing uploads for user=%s', getattr(request, 'user_id', None))
+        return jsonify({'error': 'Could not list uploads'}), 500

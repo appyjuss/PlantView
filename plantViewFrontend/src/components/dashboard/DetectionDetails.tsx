@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getDetection, reprocessDetection, type Detection } from "../../lib/mockDetections";
+import { getDetection, reprocessDetection, type Detection } from "../../lib/detections";
 
 export default function DetectionDetails({ id, onClose }: { id: string; onClose: () => void }) {
   const [detection, setDetection] = useState<Detection | undefined>(undefined);
@@ -35,7 +35,11 @@ export default function DetectionDetails({ id, onClose }: { id: string; onClose:
 
         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <img src={detection.imageDataUrl} alt="full" className="w-full rounded" />
+            {detection.imageDataUrl ? (
+              <img src={detection.imageDataUrl} alt="full" className="w-full rounded" />
+            ) : (
+              <div className="w-full h-48 bg-slate-100 rounded flex items-center justify-center text-sm text-slate-400">No image available</div>
+            )}
           </div>
           <div>
             <div className="font-semibold">Result</div>

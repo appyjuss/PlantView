@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { getToken } from "../../lib/api";
-import { saveDetection } from "../../lib/mockDetections";
+import { saveDetection } from "../../lib/detections";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
