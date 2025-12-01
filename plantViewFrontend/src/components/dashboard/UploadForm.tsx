@@ -1,4 +1,5 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import type { Detection } from "../../lib/detections";
 import { getToken } from "../../lib/api";
 import { saveDetection } from "../../lib/detections";
 
