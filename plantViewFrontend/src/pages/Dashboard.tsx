@@ -75,7 +75,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <StatCard title="Total detections" value={totalDetections} subtitle="Stored locally or from server" />
         <StatCard title="Average confidence" value={avgConfidence !== null ? `${(avgConfidence * 100).toFixed(1)}%` : '—'} subtitle="Based on local detections" />
-        <StatCard title="Uploads" value={totalDetections} subtitle="Uploads received" />
+        <StatCard title="Uploads (same as detections)" value={totalDetections} subtitle="Each detection corresponds to an upload in this mock" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
