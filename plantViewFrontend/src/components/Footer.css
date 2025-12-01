@@ -1,0 +1,28 @@
+.pv-footer {
+  width: 100%;
+  border-top: 1px solid #e5e5e5;
+  background: #fff;
+  padding: 20px 0;
+  margin-top: 40px;
+}
+
+.pv-footer-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #6b776e;
+  font-size: 0.95rem;
+}
+
+.pv-footer-right a {
+  margin-left: 18px;
+  color: #577b6b;
+  text-decoration: none;
+}
+
+.pv-footer-right a:hover {
+  color: #2f5f4c;
+}
