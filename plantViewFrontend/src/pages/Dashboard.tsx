@@ -44,7 +44,7 @@ export default function Dashboard() {
         <div className="bg-gradient-to-r from-brand-50 to-white dark:from-slate-50 rounded-lg p-6 md:p-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-brand-500">Dashboard</h1>
-            <p className="text-sm text-slate-600 mt-2 max-w-xl">Welcome back{user ? `, ${user.email}` : ""} — overview of recent detections and quick actions.</p>
+            <p className="text-sm text-slate-600 mt-2 max-w-xl">Welcome back{user ? `, ${user.email}` : ""}! Here is an overview of your recent detections.</p>
           </div>
 
           <div className="flex items-center gap-3">
