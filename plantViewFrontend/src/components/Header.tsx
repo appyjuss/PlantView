@@ -44,7 +44,7 @@ export default function Header() {
         </nav>
 
         <div className="ml-4">
-          <Link to="/upload" className="inline-block bg-[#27ae60] text-white px-5 py-2 rounded-full shadow-md text-lg font-semibold hover:bg-[#229954] transform hover:-translate-y-0.5 transition">
+          <Link to="/dashboard" className="inline-block bg-[#27ae60] text-white px-5 py-2 rounded-full shadow-md text-lg font-semibold hover:bg-[#229954] transform hover:-translate-y-0.5 transition">
             Get Started
           </Link>
         </div>

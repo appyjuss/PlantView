@@ -1,7 +1,7 @@
 // import Hero from "../components/landing/Hero";
 import FeatureSection from "../components/landing/FeaturesSection";
 import How from "../components/landing/How";
-import Footer from "../components/landing/Footer";
+// import Footer from "../components/landing/Footer"; // disabled: using global Footer from layout
 import Data from "@/components/landing/Data";
 import TopSection from "@/components/landing/TopSection";
 
@@ -43,7 +43,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <Footer />
+  {/* <Footer /> disabled - using the app-level Footer component instead */}
     </main>
   );
 }
