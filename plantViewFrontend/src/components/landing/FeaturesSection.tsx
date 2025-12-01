@@ -3,7 +3,7 @@ import './FeaturesSection.css';
 
 const FeaturesSection: React.FC = () => {
   return (
-    <section className="fs-container">
+    <section id="features" className="fs-container">
       <div className="fs-header">
         <h2>Powerful Features for <span>Smart Farming</span></h2>
         <p className="fs-description">

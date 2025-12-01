@@ -41,7 +41,7 @@ export default function Data() {
   ];
 
   return (
-    <section className="py-16">
+    <section id="data" className="py-16">
       <div className="container mx-auto px-6">
         <div className="text-center">
           <h2 className="text-3xl font-extrabold text-slate-900 sm:text-4xl">

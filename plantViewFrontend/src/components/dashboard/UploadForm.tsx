@@ -95,7 +95,7 @@ export default function UploadForm({ onComplete }: { onComplete?: (d: any) => vo
 
   return (
     <form onSubmit={submit} className="space-y-3">
-      <label className="block text-sm font-medium text-slate-700">Upload single image</label>
+  <label className="block text-lg md:text-2xl font-bold tracking-wide text-black">Upload Single Image</label>
 
       {error && (
         <div className="p-2 bg-red-100 border border-red-400 text-red-700 rounded text-sm">

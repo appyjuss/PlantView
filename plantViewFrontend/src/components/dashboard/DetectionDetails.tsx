@@ -58,9 +58,47 @@ export default function DetectionDetails({ detection: initialDetection, onClose 
           </div>
           <div>
             <div className="font-semibold">Result</div>
-            <pre className="text-sm bg-slate-50 p-3 mt-2 rounded">
-              {JSON.stringify(detection.result, null, 2)}
-            </pre>
+            <div className="mt-2 divide-y divide-slate-100">
+              {Array.isArray(detection.result) && detection.result.length ? (
+                detection.result.map((r, i) => {
+                  // compute percent 0-100
+                  const pctNum = typeof r.confidence === 'number' ? Math.max(0, Math.min(100, r.confidence * 100)) : 0;
+                  const pctLabel = `${pctNum.toFixed(1)}%`;
+                  const raw = r.label || 'Unknown';
+                  const pretty = raw.replace(/[_,]+/g, ' ').replace(/\s+/g, ' ').trim()
+                    .split(' ')
+                    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+                    .join(' ');
+
+                  // emphasize the top (first) result visually
+                  if (i === 0) {
+                    return (
+                      <div key={i} className="p-4 bg-slate-50 rounded border border-slate-100 shadow-sm">
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <div className="text-lg font-semibold text-slate-900">{pretty}</div>
+                            <div className="text-sm text-slate-500">Top prediction</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-3xl font-extrabold text-brand-500">{pctLabel}</div>
+                            <div className="text-xs text-slate-500">confidence</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={i} className="py-3 flex items-center justify-between">
+                      <div className="text-sm text-slate-800">{pretty}</div>
+                      <div className="text-sm text-slate-600 font-semibold">{pctLabel}</div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-sm text-slate-500">No result available.</div>
+              )}
+            </div>
 
             {error && (
               <div className="mt-3 p-2 bg-red-100 border border-red-400 text-red-700 rounded text-sm">

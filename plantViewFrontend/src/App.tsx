@@ -5,6 +5,8 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import PrivateRoute from "./components/PrivateRoute";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 import "./App.css";
 
 export default function App() {
@@ -12,6 +14,7 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <div className="app-root">
+          <Header />
           <main className="app-main">
             <Routes>
               <Route path="/" element={<Landing />} />
@@ -28,6 +31,7 @@ export default function App() {
               {/* add more routes here */}
             </Routes>
           </main>
+          <Footer />
         </div>
       </BrowserRouter>
     </AuthProvider>
