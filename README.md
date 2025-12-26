@@ -8,60 +8,65 @@ AI-powered plant disease detection web application with React frontend and Flask
 
 ### Prerequisites
 - Python 3.10+
-- Docker Desktop
 - Node.js 18+ (for frontend)
+- Supabase account (https://app.supabase.com)
 
-### 1. Clone & Setup
+### 1. Clone & Install Dependencies
+
 ```bash
 git clone https://github.com/appyjuss/PlantView.git
 cd PlantView
-python setup.py
 ```
 
-The setup script will:
-- Install Python dependencies
-- Create `.env` file
-# PlantView 🌱
-
-AI-powered plant disease detection web application with React frontend and Flask backend.
-
----
-
-## Quick Start (Supabase-backed)
-
-### Prerequisites
-- Python 3.10+
-- Node.js 18+ (for frontend)
-
-### 1. Clone & install
-```bash
-git clone https://github.com/appyjuss/PlantView.git
-cd PlantView
-python -m pip install -r backend/requirements.txt
-```
-
-### 2. Configure environment (Supabase)
-1. Create a Supabase project at https://app.supabase.com and copy the `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`.
-2. Copy the `.env.example` file from the project root to `backend/.env` and fill in the values (do not commit `.env`).
-
-### 3. Initialize DB & run backend
+**Backend:**
 ```pwsh
-# Activate your Python venv, then:
-python -m flask --app backend.main db migrate -m "initial schema"
-python -m flask --app backend.main db upgrade
-python -m flask --app backend.main run
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r backend/requirements.txt
 ```
 
-Backend runs on `http://localhost:5000`
-
-### 4. Start Frontend
+**Frontend:**
 ```bash
 cd plantViewFrontend
 npm install
-npm run dev
+cd ..
 ```
 
-Frontend runs on `http://localhost:5173`
+### 2. Configure Environment (Supabase)
+
+1. Create a Supabase project at https://app.supabase.com
+2. Copy your project credentials (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`)
+3. Create `backend/.env` with:
+```env
+DATABASE_URL=postgresql://[user]:[password]@[host]:5432/[database]
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+JWT_SECRET=your_secret_key_here
+```
+
+### 3. Initialize Database
+
+```pwsh
+cd backend
+python -m flask --app main db upgrade
+```
+
+### 4. Run Backend & Frontend
+
+**Terminal 1 - Backend:**
+```pwsh
+# From backend directory (with venv activated)
+python -m flask --app main run
+# Runs on http://localhost:5000
+```
+
+**Terminal 2 - Frontend:**
+```bash
+cd plantViewFrontend
+npm run dev
+# Runs on http://localhost:5173
+```
 
 ---
 
@@ -69,148 +74,219 @@ Frontend runs on `http://localhost:5173`
 
 ```
 PlantView/
-├── backend/                 # Flask backend
-│   ├── core/               # Core logic (auth, models, storage)
-│   ├── routes/             # API routes
-│   ├── tests/              # Test suite
-│   ├── app.py              # Flask app factory
-│   └── main.py             # Entry point
-├── plantViewFrontend/      # React frontend
+├── backend/                      # Flask backend
+│   ├── core/                    # Core logic (auth, models, storage, schemas)
+│   │   ├── auth.py              # JWT authentication
+│   │   ├── models.py            # SQLAlchemy models (User, Detection, Upload)
+│   │   ├── storage.py           # Supabase file operations
+│   │   ├── schemas.py           # Pydantic request/response schemas
+│   │   └── utils.py             # Helper utilities
+│   ├── routes/                  # API route blueprints
+│   │   ├── auth_routes.py       # /api/auth/* endpoints
+│   │   ├── detect_routes.py     # /api/detect endpoint (inference)
+│   │   └── upload_routes.py     # /api/upload/* endpoints
+│   ├── tests/                   # Pytest test suite
+│   │   ├── conftest.py          # Test fixtures and mocks
+│   │   ├── test_auth_db.py      # Auth & database tests
+│   │   ├── test_auth_flow.py    # Full auth flow tests
+│   │   ├── test_upload.py       # Upload endpoint tests
+│   │   └── test_upload_upsert.py# Upload/upsert logic tests
+│   ├── app.py                   # Flask application factory
+│   ├── main.py                  # Entry point
+│   ├── prediction.py            # ML model inference
+│   ├── requirements.txt          # Python dependencies
+│   └── run-flask.ps1            # PowerShell run script
+├── plantViewFrontend/            # React frontend
 │   ├── src/
-│   │   ├── pages/          # Page components
-│   │   ├── components/     # Reusable components
-│   │   ├── context/        # React context (auth)
-│   │   └── lib/            # API client, utilities
-│   └── vite.config.ts
-├── migrations/             # Alembic migrations
-├── .env.example            # Environment template
+│   │   ├── pages/               # Page components
+│   │   │   ├── Landing.tsx      # Public landing page
+│   │   │   ├── Dashboard.tsx    # Main app (protected)
+│   │   │   ├── Login.tsx        # Login page
+│   │   │   └── SignUp.tsx       # Registration page
+│   │   ├── components/          # Reusable components
+│   │   │   ├── dashboard/       # Dashboard sub-components
+│   │   │   ├── landing/         # Landing page sections
+│   │   │   └── ui/              # UI library (button, card)
+│   │   ├── context/             # React context
+│   │   │   └── AuthContext.tsx  # Auth state management
+│   │   ├── lib/                 # Libraries & utilities
+│   │   │   ├── api.ts           # Axios client with JWT injection
+│   │   │   ├── detections.ts    # Detection helpers
+│   │   │   └── utils.ts         # General utilities
+│   │   ├── App.tsx              # Main router (BrowserRouter)
+│   │   └── main.tsx             # Entry point
+│   ├── vite.config.ts
+│   ├── tailwind.config.js
+│   └── tsconfig.json
+├── migrations/                   # Alembic database migrations
+│   ├── alembic.ini
+│   ├── env.py
+│   └── versions/
+│       └── 33615b6b0d60_initial_schema.py
+├── models/                       # ML model artifacts
+│   ├── resnet50_model.pth       # Fine-tuned ResNet50 weights
+│   └── labels_mapping.json      # Disease class labels (38 classes)
+├── .env.example                  # Environment template
+├── package.json                  # Root-level scripts
+└── pytest.ini                   # Pytest configuration
 ```
 
 ---
 
 ## API Endpoints
 
-### Authentication
+### Authentication Routes (`/api/auth`)
 - `POST /api/auth/signup` - Register new user
-- `POST /api/auth/login` - Login user
-- `POST /api/auth/refresh` - Refresh JWT token
-- `GET /api/auth/verify` - Verify token
-- `POST /api/auth/logout` - Logout
+- `POST /api/auth/login` - Login and get JWT token
+- `POST /api/auth/refresh` - Refresh expired JWT
+- `GET /api/auth/verify` - Verify token validity
+- `POST /api/auth/logout` - Logout user
 
-### Protected Routes
-All endpoints require `Authorization: Bearer <token>` header (unless you use cookies after server-side changes).
+### Detection Routes (`/api/detect`)
+- `POST /api/detect` - Send image for disease detection (requires auth)
+  - Returns: `{confidence: float, disease_class: string, disease_label: string, timestamp: string}`
+
+### Upload Routes (`/api/upload`)
+- `POST /api/upload` - Upload image and get signed URL (requires auth)
+- `GET /api/upload/history` - Get user's upload history (requires auth)
+
+### Authentication
+All protected endpoints require header:
+```
+Authorization: Bearer <JWT_TOKEN>
+```
 
 ---
 
 ## Database
 
-This project uses Supabase (hosted Postgres) as the primary database. After creating a Supabase project, copy your project's connection string into `backend/.env` as `DATABASE_URL`.
+**Database Engine:** Supabase (Managed PostgreSQL)
 
-### Verify tables
-Use the Supabase SQL editor to run:
-```sql
-SELECT tablename
-FROM pg_catalog.pg_tables
-WHERE schemaname = 'public'
-ORDER BY tablename;
+**Initialization:**
+```pwsh
+python -m flask --app main db upgrade
 ```
+
+**Tables:**
+- `users` - User accounts with hashed passwords
+- `uploads` - Image metadata and signed URLs
+- `detections` - ML inference results linked to uploads
+
+**Verify Connection:**
+Use Supabase dashboard SQL editor or psql CLI to test connection.
 
 ---
 
 ## Testing
 
-### Run All Tests
+**Run All Tests:**
 ```bash
 pytest backend/tests -v
 ```
 
-### Run Specific Test File
+**Run Specific Test File:**
 ```bash
 pytest backend/tests/test_auth_db.py -v
 ```
 
-### Run with Coverage
+**Run with Coverage:**
 ```bash
 pytest backend/tests --cov=backend --cov-report=html
 ```
+
+**Test Categories:**
+- `test_auth_db.py` - User registration, login, token refresh
+- `test_auth_flow.py` - Full authentication flow with protected routes
+- `test_upload.py` - Image upload to Supabase
+- `test_upload_upsert.py` - Upload metadata persistence and updates
+
+**Note:** Tests use mocked Supabase interactions; actual file uploads are not tested against real storage.
 
 ---
 
 ## Development
 
 ### Backend Commands
-```bash
-# Run development server
-python -m flask --app backend.main run
+
+**Run Development Server:**
+```pwsh
+cd backend
+python -m flask --app main run
+# Runs on http://localhost:5000
 ```
 
-npm run dev
+**Run with Auto-reload:**
+```pwsh
+python -m flask --app main run --reload
+```
 
-# Build for production
+**Database Migration (if schema changed):**
+```pwsh
+# Create new migration
+python -m flask --app main db migrate -m "your message"
+
+# Apply migration
+python -m flask --app main db upgrade
+```
+
+### Frontend Commands
+
+**Run Development Server:**
+```bash
+cd plantViewFrontend
+npm run dev
+# Runs on http://localhost:5173
+```
+
+**Build for Production:**
+```bash
 npm run build
 ```
 
-### Docker Commands
+**Preview Production Build:**
 ```bash
-# Start services
-docker-compose up -d
-
-# Stop services
-docker-compose down
-
-# View logs
-docker-compose logs -f
-
-# Restart specific service
-docker-compose restart postgres
+npm run preview
 ```
 
 ---
 
 ## Troubleshooting
 
-### Database Connection Error
-```bash
-# Check if PostgreSQL is running
-docker ps | grep postgres
+### Backend Won't Start
+```pwsh
+# Ensure venv is activated
+.\venv\Scripts\Activate.ps1
 
-# Restart PostgreSQL
-docker-compose restart postgres
+# Install missing dependencies
+pip install -r backend/requirements.txt
 
-# Check logs
-docker-compose logs postgres
+# Check for port conflicts (port 5000)
+netstat -ano | findstr :5000
 ```
 
-### Redis Connection Error
-```bash
-# Check if Redis is running
-docker ps | grep redis
+### Database Connection Error
+- Verify `DATABASE_URL` in `backend/.env` is correct
+- Check Supabase project is active and running
+- Ensure `.env` file has correct credentials from Supabase dashboard
 
-# Test Redis connection
-docker exec -it plantview-redis redis-cli ping
+### Frontend Build Error
+```bash
+cd plantViewFrontend
+rm -r node_modules package-lock.json
+npm install
+npm run dev
 ```
 
 ### Port Already in Use
-```bash
-# Find process using port (Windows)
+```pwsh
+# Find process using port
 netstat -ano | findstr :5000
 
-# Kill process (Windows PowerShell)
+# Kill process (replace <PID> with actual process ID)
 Stop-Process -Id <PID> -Force
 
-# Or change port in .env
-PORT=5001
-```
-
-### Migration Issues
-```bash
-# Reset database
-flask --app backend.main init-db
-
-# If that fails, restart from scratch
-docker-compose down -v
-docker-compose up -d
-flask --app backend.main init-db
+# Or use different port
+python -m flask --app main run --port 5001
 ```
 
 ---
@@ -218,51 +294,48 @@ flask --app backend.main init-db
 ## Tech Stack
 
 **Backend**
-- Flask 3.1.2
-- SQLAlchemy (ORM)
-- PostgreSQL 16
-- Redis (rate limiting)
-- JWT authentication
-- Bcrypt (password hashing)
+- Flask 3.1.2 - Web framework
+- SQLAlchemy - ORM
+- Alembic - Database migrations
+- PyJWT - JWT token handling
+- Bcrypt - Password hashing
+- Supabase Client - PostgreSQL & object storage
+- Python 3.10+
 
 **Frontend**
-- React 18
-- TypeScript
-- Vite
-- React Router
-- Axios
+- React 18 - UI framework
+- TypeScript - Type safety
+- Vite - Build tool
+- React Router - Navigation (multi-page routing)
+- Axios - HTTP client
+- Tailwind CSS - Styling
+- Node.js 18+
 
-**DevOps**
-- Docker & Docker Compose
-- Pytest (testing)
-- Flask-Migrate (migrations)
+**ML Model**
+- ResNet50 (transfer learning) - Disease classification backbone
+- 38 plant disease classes
+
+**Infrastructure**
+- Supabase - PostgreSQL database + object storage
+- Pytest - Testing framework
 
 ---
 
 ## Project Goals
 
-* Showcase how AI can be applied in agriculture
-* Help farmers and researchers monitor crop health
-* Explore the potential of CNNs in image classification
+* Apply AI to agriculture for practical crop health monitoring
+* Help farmers and researchers identify plant diseases early
+* Demonstrate CNN effectiveness in agricultural image classification
 
 ---
 
 ## Future Improvements
 
-* Expand dataset for more plant species and diseases
-* Add visualization for prediction confidence levels
-* Implement ML model inference endpoints
-* Deploy to production with Supabase/Railway
-
----
-
-## Documentation
-
-For detailed documentation, see:
-- [`GETTING_STARTED.md`](GETTING_STARTED.md) - Quick start guide
-- [`docs/DATABASE_MIGRATION.md`](docs/DATABASE_MIGRATION.md) - Database setup guide
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) - System architecture
-- [`docs/AUTH_SETUP.md`](docs/AUTH_SETUP.md) - Authentication details
+* Expand model to support more plant species and disease variants
+* Add real-time prediction confidence visualization
+* Implement batch detection API for bulk image analysis
+* Deploy to production with cloud infrastructure
+* Mobile app support (React Native)
 
 ---
 
